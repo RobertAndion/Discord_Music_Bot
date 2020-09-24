@@ -5,6 +5,9 @@ You must place all of the files in the same directory in order for this to work.
 
 If you want to change the lavalink password you must change it in the application.yml
 and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
+
+You must also place your discord bot token in the .env file where prompeted.
+
 #######################################
 Lava link is not my creation and can be found at:
 lavalink.jar MUST BE DOWNLOADED AND PLACED IN DIRECTORY
