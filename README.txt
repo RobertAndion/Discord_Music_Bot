@@ -10,7 +10,10 @@ You must also place your discord bot token in the .env file where prompeted.
 
 Dependancies:
 You must have java 11 for lavalink.
-You must install python-dotenv, discord.py and lavalink.py pip should be able to install all three.
+You must install python-dotenv, discord.py and lavalink.py links are listed below.
+https://pypi.org/project/python-dotenv/
+https://pypi.org/project/discord.py/
+https://github.com/Devoxin/Lavalink.py
 
 #######################################
 Lava link is not my creation and can be found at:
