@@ -13,4 +13,8 @@ https://github.com/Frederikam/Lavalink/releases
 run the lavalink server using the command : java -jar lavalink.jar
 Then run the bot in a seperate terminal using: python bot.py
 Both terminals must remain running for the bot to be live, consider using tmux.
+######################################
+ALSO: Before many commands will work an initial "play" command will need to be made. Once this is done once
+it will not need to be redone for the entirety of the bots run time. 
+######################################
 
