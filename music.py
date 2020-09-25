@@ -4,6 +4,8 @@ import lavalink
 from discord import utils
 from discord import Embed
 import fileRead
+import re
+url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 """
 Robert A. USF Computer Science
@@ -31,9 +33,12 @@ class music(commands.Cog):
                 await self.connect_to(ctx.guild.id, str(vc.id))
 
         try:
-            if ctx.author.voice is not None: #and ctx.channel.id == vc.id: #make sure sender is in voice chat to play a song, doesnt check if in the correct voice channel, fix later perhaps
+            if ctx.author.voice is not None: #and ctx.channel.id == vc.id: #make sure sender is in voice chat to play a song
                 #player = self.bot.music.player_manager.get(ctx.guild.id)
-                query = f'ytsearch:{query}'
+                query = query.strip('<>')
+                if not url_rx.match(query): # This and the line above and below allow for direct link play
+                    query = f'ytsearch:{query}'
+
                 results = await player.node.get_tracks(query)
                 try:
                     track = results['tracks'][0]
