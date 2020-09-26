@@ -82,13 +82,10 @@ still commented out in the code to be removed in future releases.
 .shuffle --------------------
 This will shuffle the songs, although it will not show up this way on a queue command.
 The order remains the same but the song picked is random. Good in tandem with the playlists,
-it will continue to shuffle forever untill you do stopshuffle. (unshuffled by default) there may be an 
-issue where if a last song is chosen during a shuffle it will end instead of playing more songs afterwards. 
-(untested, this is a newer command)
+it will continue to shuffle forever untill you do stopshuffle. (unshuffled by default) 
 
 .stopshuffle <unshuffle> ---------------
 This will stop the shuffle command and return the function to the default state of unshuffled.
-Also a newer lesser tested function with no known issues.
 
 PLAYLIST COMMANDS:
 NOTE: All playlists are stored by the persons name .json, in the future this will probably be changed to discord ID,
@@ -157,5 +154,4 @@ Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
 Add a timer to the pause command.
-Look into shuffle function.
 Possibly overload skip to have a number to skip E.X. .skip 5 will skip 5 songs.
