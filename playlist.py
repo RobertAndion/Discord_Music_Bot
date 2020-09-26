@@ -137,7 +137,7 @@ class playlist(commands.Cog):
                                 except Exception as error:
                                     await ctx.channel.send("Song not found. (or title has emojis/symbols)")
                             else:
-                                await ctx.channel.send("Please join a voice chat to play a song.")
+                                return await ctx.channel.send("Please join a voice chat to play a song.")
                                 break
 
                         except Exception as error:
