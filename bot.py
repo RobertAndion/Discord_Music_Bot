@@ -7,7 +7,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 from discord.ext import commands
 
 Serverinformation = """
-BullBot Version 0.1:
+Discord Music Bot Version 1.1:
 All commands need the prefix "." in order to run. use .help to see all commands and .help play ,
 for example will show information about the play command.
 To use the "Admin" functions the user must have "kick" "ban" permissions for some or a role by the name of "Administrator" for others.

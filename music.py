@@ -32,25 +32,27 @@ class music(commands.Cog):
                 player.store('channel',ctx.channel.id) #used so we have the ctx.channel usage
                 await self.connect_to(ctx.guild.id, str(vc.id))
 
-        try:
-            query = query.strip('<>')
-            if not url_rx.match(query): # This and the line above and below allow for direct link play
-                query = f'ytsearch:{query}'
-
-            results = await player.node.get_tracks(query)
             try:
-                track = results['tracks'][0]
-                player.add(requester=ctx.author.id, track=track)
-                track_title = track["info"]["title"]
-                if not player.is_playing:
-                    await player.play()
-                fileRead.logUpdate(member,track_title) # Add the song to the log
-                await ctx.channel.send(f"{track_title} added to queue.") 
-            except Exception as error:
-                await ctx.channel.send("Song not found. (or title has emojis/symbols)")
+                query = query.strip('<>')
+                if not url_rx.match(query): # This and the line above and below allow for direct link play
+                    query = f'ytsearch:{query}'
 
-        except Exception as error:
-            print(error)
+                results = await player.node.get_tracks(query)
+                try:
+                    track = results['tracks'][0]
+                    player.add(requester=ctx.author.id, track=track)
+                    track_title = track["info"]["title"]
+                    if not player.is_playing:
+                        await player.play()
+                    fileRead.logUpdate(member,track_title) # Add the song to the log
+                    await ctx.channel.send(f"{track_title} added to queue.") 
+                except Exception as error:
+                    await ctx.channel.send("Song not found. (or title has emojis/symbols)")
+
+            except Exception as error:
+                print(error)
+        else:
+            await ctx.channel.send("Please connect to a voice chat first.")
 
     async def track_hook(self,event): #disconnects bot when song list is complete.
         if isinstance(event, lavalink.events.QueueEndEvent):
@@ -97,24 +99,24 @@ class music(commands.Cog):
 
 
 
-    @commands.command(name = 'stop',description="Stops the bot's audio") #stops all music to be played on bot
-    @commands.has_any_role('Dj','Administrator','DJ')
-    async def stop_song(self,ctx):
-        try:
-            player = self.bot.music.player_manager.get(ctx.guild.id)
-            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
-                if not player.is_playing:
-                    ctx.channel.send("Nothing playing to stop.")
-                else:
-                    await ctx.channel.send("Music stopped.")
-                    await player.stop()
-            else:
-                await ctx.channel.send("Please join the same voice channel as me.")
-        except Exception as error:
-            await ctx.channel.send("Nothing playing.")
+#    @commands.command(name = 'stop',description="Stops the bot's audio") #stops all music to be played on bot # Depricated function, 
+#   @commands.has_any_role('Dj','Administrator','DJ')                                                           # better to use clear.
+#    async def stop_song(self,ctx):
+#        try:
+#            player = self.bot.music.player_manager.get(ctx.guild.id)
+#            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
+#                if not player.is_playing:
+#                    ctx.channel.send("Nothing playing to stop.")
+#                else:
+#                    await ctx.channel.send("Music stopped.")
+#                    await player.stop()
+#            else:
+#                await ctx.channel.send("Please join the same voice channel as me.")
+#        except Exception as error:
+#            await ctx.channel.send("Nothing playing.")
 
-
-    @commands.command(name = 'disconnect', aliases = ['dc'],description="Force disconnects the bot from a voice channel") #disconnects bot from voice channel
+    # may remove this as it is depricated by clear, a safer alternative.
+    @commands.command(name = 'disconnect', aliases = ['dc'],description="Force disconnects the bot from a voice channel") #bad practice, better to use clear.
     @commands.has_any_role('Dj','Administrator','DJ')
     async def disconnect_bot(self,ctx):
         try:
