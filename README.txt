@@ -106,7 +106,7 @@ This will list all of the users playlists whether or not the user is in a voice 
 This will delete the entire playlist given with no confirmation and no reclamation.
 Be certain before you delete as it is permanant.
 
-.deletefromplaylist <Song number (maps with lpl command numbering), Playlistname> ---------
+.deletefromplaylist <Song number (maps with vpl command numbering), Playlistname> ---------
 This function takes two paramaters, seperated by spaces. The first is the song number and
 the second is the name of the playlist to delete the song from.
 
@@ -136,11 +136,26 @@ It requires the ban and kick permissions.
 This will ban the named user from the server.
 It requires the ban and kick permissions.
 
-.assign Will finish the rest soon.
+.assign <@membername, Role> ----------
+Used to assign a role to a user on text command. Once this is done that role will be locked to bot control.
+The first argument is the @user and he second is the name of the roll. Requires "Admin" or "Administrator" role.
 
--- MORE COMMANDS -- TO BE LISTED.
+.log <@membername, amount> ----------
+Will list the actions performed by the person for x amount of entries. ex: .log @Rob 12 
+will show the last 12 actions (If there are that many) for rob. Requires "Administrator" or "Admin" role.
+
+.move <@member, channel name> -------
+This will move the given user into the channel name listed. Requires the "Administrator" or "Admin" role.
+
+.disconnectuser <@membername> (dcuser) -------
+This will disconnect the named user from voice channels. Requires the "Administrator" or "Admin" role.
+
+The Administration functions can be removed if undesired by deleting Admin.py from the directory and removing line 29 from bot.py 
+'client.load_extension('Admin')' This is the command that loads in the Cog.
 
 Robert A -USF Computer Science
-Todo:
+
+Todo/Possible adds in the future:
 Add a timer to the pause command.
 Look into shuffle function.
+Possibly overload skip to have a number to skip E.X. .skip 5 will skip 5 songs.
