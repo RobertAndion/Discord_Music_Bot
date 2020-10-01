@@ -66,19 +66,23 @@ class music(commands.Cog):
     
     @commands.command(name = 'skip',description="Skips currently playing song.") #skips currently playing song
     @commands.has_any_role('Dj','Administrator','DJ')
-    async def skip_song(self, ctx):
+    async def skip_song(self, ctx,amount = 1):
         try:
             player = self.bot.music.player_manager.get(ctx.guild.id)
-            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
-                if not player.is_playing:
-                    await ctx.channel.send("Nothing playing to skip.")
+            x = 0
+            while (x < amount):
+                x = x + 1
+                if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
+                    if not player.is_playing:
+                        return await ctx.channel.send("Nothing playing to skip.")
+                    else:
+                        await player.skip()
+                        if x == 1: # make sure song skipped only prints once.
+                            await ctx.channel.send("Song skipped.")
                 else:
-                    await player.skip()
-                    await ctx.channel.send("Song skipped.")
-            else:
-                await ctx.channel.send("Please join the same voice channel as me.")
+                    return await ctx.channel.send("Please join the same voice channel as me.")
         except Exception as error:
-            await ctx.channel.send("Nothing playing.")
+            return await ctx.channel.send("Nothing playing.")
 
     @commands.command(name = "clear",description="Clears all of the currently playing songs and makes the bot disconnect.")
     @commands.has_any_role("Dj","DJ","Administrator")
