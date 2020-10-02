@@ -46,7 +46,7 @@ NOTE: Anything in <> is an argument required by the function. Anything in () are
 This command, if you are a server admin, will send you a private message with a short summary of how to use the bot.
 It has no other function,
 
-.play <SONG NAME> ------------------------
+.play <SONG-NAME> ------------------------
 If the person using the command is in a voice channel and the bot has access to that channel it will connect and play the song listed.
 This is also the command to continue adding songs to the queue, it covers both functions. The bot will auto disconnect
 when the end of the queue is reached.
@@ -85,7 +85,7 @@ This will shuffle the songs, although it will not show up this way on a queue co
 The order remains the same but the song picked is random. Good in tandem with the playlists,
 it will continue to shuffle forever untill you do stopshuffle. (unshuffled by default) 
 
-.stopshuffle <unshuffle> ---------------
+.stopshuffle (unshuffle) ---------------
 This will stop the shuffle command and return the function to the default state of unshuffled.
 
 PLAYLIST COMMANDS:
