@@ -155,4 +155,3 @@ Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
 Add a timer to the pause command.
-Possibly overload skip to have a number to skip E.X. .skip 5 will skip 5 songs.
