@@ -1,3 +1,4 @@
+## NEEDS UPDATING FOR NEW FUNCTION RENAME AND FOR WELCOME.PY, WILL BE DONE SHORTLY.
 Discord Music Bot created by Robert Andion USF Computer Science.
 
 You must place all of the files in the same directory in order for this to work.

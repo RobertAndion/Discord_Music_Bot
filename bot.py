@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 from discord.ext import commands
+## Robert A. USF Computer Science: 
+## Python discord bot with limited administration commands and an array of
+## music playing commands, along with a new welcome/auto role function.
 
 Serverinformation = """
 Discord Music Bot Version 1.1:
@@ -16,11 +19,6 @@ To use the "Music" functions of the bot the role of: "Dj", "DJ", or "Administrat
 To make roles you enter server settings and click roles. From there the plus sign creates the new role.
 
 """
-""" Robert A. USF Computer Science: 
-    Python discord bot "BullBot" a bot with limited administration commands and an array of
-    music playing commands. 
-
-"""
 client = commands.Bot(command_prefix='.')
 
 @client.event
@@ -29,18 +27,11 @@ async def on_ready():
     client.load_extension('Admin')
     client.load_extension('music')
     client.load_extension('playlist')
+    client.load_extension('welcome')
 
 @client.command(name="setup")
 @commands.has_permissions(administrator=True)
 async def setup(ctx):
     await ctx.author.send(Serverinformation)
-
-"""@client.command()
-@commands.has_permissions(administrator=True) #Example for permissions NEED TO CHANGE TO A BETTER SYSTEM
-async def exitbot(ctx):
-                      WORK ON THIS IN THE FUTURE TO REMOVE ERROR ON CLOSE
-    await client.logout() or .close() perhaps
-"""
-
 
 client.run(TOKEN)
