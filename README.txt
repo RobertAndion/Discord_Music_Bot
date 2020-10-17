@@ -9,7 +9,7 @@ and in both music.py and playlist.py on the commented lines where 'changeme123' 
 You must also place your discord bot token in the .env file where prompeted.
 
 Dependancies:
-You must have java 11 for lavalink.
+You must have java 11 (or java 13) for lavalink.
 You must install python-dotenv, discord.py and lavalink.py links are listed below.
 https://pypi.org/project/python-dotenv/
 https://pypi.org/project/discord.py/
@@ -159,7 +159,7 @@ The Administration functions can be removed if undesired by deleting Admin.py fr
 WELCOME FUNCTIONS:
 
 These are automated functions that will activate on a new member joining. They will be greeted in your "general" chat
-and given the role "Example" automatically. These should be changed to your unique needs, and the role should be created and customised in your server first.
+and given the role "Example" automatically. These should be changed to your unique needs, and the role should be created and customized in your server first.
 If you do not want automatic roles the two lines to remove are marked in the welcome.py file. There are also comments there that 
 direct you how to changed the channel the announcement will be placed in. There is also the option to change the printed message.
 
