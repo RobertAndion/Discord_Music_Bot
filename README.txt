@@ -1,4 +1,3 @@
-## NEEDS UPDATING FOR NEW FUNCTION RENAME AND FOR WELCOME.PY, WILL BE DONE SHORTLY.
 Discord Music Bot created by Robert Andion USF Computer Science.
 
 You must place all of the files in the same directory in order for this to work.
@@ -121,6 +120,10 @@ If the playlist does not exist or no song is playing this will fail not work.
 This will play the entire playlist name given. Case sensitive. It will take some time to load all songs,
 it will print a message when it is completely done.
 
+.renameplaylist <current name,new name> (rpl) -----------
+This function will rename an existing playlist. The names must be seperated by a comma
+and no spaces before or after the comma. 
+
 All the functions in fileRead are used by commands and require no command to use. 
 
 ADMIN COMMANDS:
@@ -151,6 +154,29 @@ This will disconnect the named user from voice channels. Requires the "Administr
 
 The Administration functions can be removed if undesired by deleting Admin.py from the directory and removing line 29 from bot.py 
 'client.load_extension('Admin')' This is the command that loads in the Cog.
+
+
+WELCOME FUNCTIONS:
+
+These are automated functions that will activate on a new member joining. They will be greeted in your "general" chat
+and given the role "Example" automatically. These should be changed to your unique needs, and the role should be created and customised in your server first.
+If you do not want automatic roles the two lines to remove are marked in the welcome.py file. There are also comments there that 
+direct you how to changed the channel the announcement will be placed in. There is also the option to change the printed message.
+
+NOTE: The role will follow any server you add it to and fail. If you plan to have the bot in more than one server add the following instead
+of the current two lines for the role.
+"""
+if servername == "YourServerHere":
+            role = get(member.guild.roles, name = serverrolename) #Remove this line and below to not add a role to a new user
+            await member.add_roles(role)                          #Remove me if you remove the line above.
+"""
+
+This will make it so the role function only applies to your server. You can put the greeting under this protection as well,
+however most servers have a general chat. The name of the user and of the server are dynamicaly coded.
+
+The welcome functions can be removed by deleting line 30 in bot.py and deleting welcome.py.
+'client.load_extension('welcome')' This is the command that loads in the Cog.
+
 
 Robert A -USF Computer Science
 
