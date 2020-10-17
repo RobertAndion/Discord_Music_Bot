@@ -88,7 +88,7 @@ class playlist(commands.Cog):
             await ctx.channel.send("Please have the first song you want to add playing to make a new playlist.")
 
 
-    @commands.command(name="addtoplaylist",aliases=["atp"],description="Adds currently playing song to the given playlist name as log as it exists.")
+    @commands.command(name="addtoplaylist",aliases=["atp"],description="Adds currently playing song to the given playlist name as long as it exists.")
     @commands.has_any_role("DJ","Dj","Administrator")
     async def add_to_playlist(self,ctx,*,playlist_name):
         player = self.bot.music.player_manager.get(ctx.guild.id)
@@ -108,54 +108,37 @@ class playlist(commands.Cog):
     async def play_from_list(self,ctx,*,playlist_name):
         songlist = fileRead.play_playlist(ctx,playlist_name) 
         if songlist == False:
-            await ctx.channel.send("Playlist not found.")
-        else:
-            try:
-                i = 0
-                for query in songlist:
-                    if i < 1: #only need to connect the player and do checks on first run. Using an else to save system resources.
-                        member = utils.find(lambda m: m.id == ctx.author.id, ctx.guild.members) # This will connect the bot if it is not already connected.
-                        if member is not None and member.voice is not None:
-                            vc = member.voice.channel
-                            player = self.bot.music.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
-                            if not player.is_connected: #heres where check actually happens. may be a waste of resources. look into.
-                                player.store('channel',ctx.channel.id)
-                                await self.connect_to(ctx.guild.id, str(vc.id))
+            return await ctx.channel.send("Playlist not found.")
 
-                        try:
-                            if ctx.author.voice is not None:
-                                query = f'ytsearch:{query}'
-                                results = await player.node.get_tracks(query)
-                                try:
-                                    track = results['tracks'][0]
-                                    player.add(requester=ctx.author.id, track=track)
-                                    track_title = track["info"]["title"]
-                                    if not player.is_playing:
-                                        await player.play()
-                                    fileRead.logUpdate(member,track_title) # Add the song to the log
-                                    i = i + 1
-                                except Exception as error:
-                                    await ctx.channel.send("Song not found. (or title has emojis/symbols)")
-                            else:
-                                return await ctx.channel.send("Please join a voice chat to play a song.")
-                                break
+        member = utils.find(lambda m: m.id == ctx.author.id, ctx.guild.members) # This will connect the bot if it is not already connected, updated and more efficient.
+        if member is not None and member.voice is not None:
+            vc = member.voice.channel
+            player = self.bot.music.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+            if not player.is_connected: 
+                player.store('channel',ctx.channel.id)
+                await self.connect_to(ctx.guild.id, str(vc.id))
 
-                        except Exception as error:
-                            print(error)
-                    else: #resource saving addition of songs after the first.
-                        player = self.bot.music.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+            for query in songlist:
+                try:
+                    if ctx.author.voice is not None:
                         query = f'ytsearch:{query}'
                         results = await player.node.get_tracks(query)
                         try:
                             track = results['tracks'][0]
                             player.add(requester=ctx.author.id, track=track)
+                            track_title = track["info"]["title"]
+                            if not player.is_playing:
+                                await player.play()
+                                
                         except Exception as error:
                             await ctx.channel.send("Song not found. (or title has emojis/symbols)")
 
+                except Exception as error:
+                        print(error)
 
-                await ctx.channel.send("Playlist added to queue.")
-            except Exception as error:
-                await ctx.channel.send("Playlist not found.")
+            await ctx.channel.send("Playlist added to queue.")
+        else:
+            return await ctx.channel.send("Please join a voice chat to play the playlist.")
 
     async def track_hook(self,event): #disconnects bot when song list is complete.
         if isinstance(event, lavalink.events.QueueEndEvent):
@@ -166,6 +149,16 @@ class playlist(commands.Cog):
         ws = self.bot._connection._get_websocket(guild_id)
         await ws.voice_state(str(guild_id), channel_id)
 
+    @commands.command(name="renameplaylist",aliases = ["rpl"],description="Renames a current list. Input as: current name,new name")
+    @commands.has_any_role("Dj","DJ","Administrator")
+    async def rename_playlist(self,ctx,*,raw_name):
+        status = fileRead.rename_playlist(ctx,raw_name)
+        if status == "Success":
+            await ctx.channel.send("Playlist name updated.")
+        elif status == "No-List":
+            await ctx.channel.send("Operation failed. You either have no playlists or no playlist by the given name.")
+        elif status == "Invalid-Input":
+            await ctx.channel.send("Please format the command properly. .rpl current name,new name (MANDATORY COMMA)")
 
 
 def setup(bot):

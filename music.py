@@ -44,7 +44,7 @@ class music(commands.Cog):
                     track_title = track["info"]["title"]
                     if not player.is_playing:
                         await player.play()
-                    fileRead.logUpdate(member,track_title) # Add the song to the log
+                    fileRead.logUpdate(ctx,track_title) # Add the song to the log
                     await ctx.channel.send(f"{track_title} added to queue.") 
                 except Exception as error:
                     await ctx.channel.send("Song not found. (or title has emojis/symbols)")
@@ -101,24 +101,6 @@ class music(commands.Cog):
         except Exception as error:
             await ctx.channel.send("Nothing playing.")
 
-
-
-#    @commands.command(name = 'stop',description="Stops the bot's audio") #stops all music to be played on bot # Depricated function, 
-#   @commands.has_any_role('Dj','Administrator','DJ')                                                           # better to use clear.
-#    async def stop_song(self,ctx):
-#        try:
-#            player = self.bot.music.player_manager.get(ctx.guild.id)
-#            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
-#                if not player.is_playing:
-#                    ctx.channel.send("Nothing playing to stop.")
-#                else:
-#                    await ctx.channel.send("Music stopped.")
-#                    await player.stop()
-#            else:
-#                await ctx.channel.send("Please join the same voice channel as me.")
-#        except Exception as error:
-#            await ctx.channel.send("Nothing playing.")
-
     # may remove this as it is depricated by clear, a safer alternative.
     @commands.command(name = 'disconnect', aliases = ['dc'],description="Force disconnects the bot from a voice channel") #bad practice, better to use clear.
     @commands.has_any_role('Dj','Administrator','DJ')
@@ -169,17 +151,6 @@ class music(commands.Cog):
                 await ctx.channel.send("Please join the same voice channel as me.")
         except Exception as error:
             await ctx.channel.send("Nothing playing.")
-
-
-#    @commands.command(name='current',aliases = ['np','nowplaying'],description="Shows the currently playing song.") #display the currently playing song
-#    @commands.has_any_role('Dj','Administrator','DJ')
-#    async def now_playing(self,ctx):
-#        player = self.bot.music.player_manager.get(ctx.guild.id) This is deprecated since queue now shows now playing.
-#        if player.is_playing:
-#            songname = player.current['title']
-#            await ctx.channel.send(f"Now playing: {songname}") 
-#        else:
-#            await ctx.channel.send("Nothing currently playing.")
 
 
     @commands.command(name='queue',aliases=['playlist','songlist','upnext'],description="Shows songs up next in order, with the currently playing at the top.") # display the songs in the order they are waiting to play

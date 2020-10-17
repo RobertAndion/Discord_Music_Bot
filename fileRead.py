@@ -5,21 +5,20 @@ from discord.utils import get
 from discord import Embed
 import os.path
 from os import path
-"""
-Robert A. USF Computer Science
-This function is a helper function to playlist.py to help with the process of reading in and writing out
-to JSON.
-"""
+##
+# This is a helper function to playlist.py to manage the JSON file I/O
+##
 
-def logUpdate(member : discord.Member, songName): #automatically logs all songs played by a user in a textfile named their name.
-    user_file = os.path.join("SongLog",member.display_name) 
+def logUpdate(ctx, songName): #automatically logs all songs played by a user in a textfile named their name.
+    user_file = os.path.join("SongLog",str(ctx.author.id)) 
     user_file = str(user_file) + ".txt"
     user_write = open(user_file,"a")
     user_write.write(str(songName) + "\n")
+    user_write.close()
 
 
 def playlist_read(listname,ctx):
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     i = 1
     try:
@@ -37,7 +36,7 @@ def playlist_read(listname,ctx):
 
 
 def list_playlist(ctx): #function to list all of the users playlists.
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     i = 1
     final = ""
@@ -53,7 +52,7 @@ def list_playlist(ctx): #function to list all of the users playlists.
 
 
 def new_playlist(ctx,playlist_name,now_playing): #function to create a new playlist in the JSON file or make a JSON file if none exists for the user
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     if path.exists(userpath):
         with open(userpath,"r") as read_file:
@@ -69,15 +68,16 @@ def new_playlist(ctx,playlist_name,now_playing): #function to create a new playl
 
 
 def help_newplaylist(ctx,data): #has no safety checks to write. needs to be done before hand only a helper function for within the doc
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     file = open(userpath,"w")
     file.write(data)
-    #with open(userpath,"w") as write_file:
-        #json.dump(data,write_file)
+    file.close()
+    #with open(userpath,"w") as write_file: Alternative way to open the file.
+        #json.dump(data,write_file) This will not work as intended.
 
 def delete_playlist(ctx,playlist_name):
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     if path.exists(userpath):
         with open(userpath,"r") as read_file:
@@ -94,7 +94,7 @@ def delete_playlist(ctx,playlist_name):
 
 
 def delete_from_playlist(ctx, playlist_name,selection):
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     if path.exists(userpath):
         with open(userpath,"r") as read_file:
@@ -111,12 +111,12 @@ def delete_from_playlist(ctx, playlist_name,selection):
         return "No-Playlists"
 
 
-def add_to_playlist(ctx,playlist_name,now_playing): # Reads json, finds playlists and add song then uses help_newplaylist to write back.
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+def add_to_playlist(ctx,playlist_name,now_playing) -> bool: # Reads json, finds playlists and add song then uses help_newplaylist to write back.
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     if path.exists(userpath):
         try:
-            with open(userpath,"r") as read_file: #focusing on format here at first
+            with open(userpath,"r") as read_file: 
                 data = json.load(read_file) 
                 temp = [now_playing]
                 data[playlist_name] += temp
@@ -129,10 +129,10 @@ def add_to_playlist(ctx,playlist_name,now_playing): # Reads json, finds playlist
 
 
 def play_playlist(ctx,playlist_name): # loads songs from a playlist to be parsed by the calling function
-    userpath = os.path.join("Playlist",ctx.author.display_name) 
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
     userpath = str(userpath) + ".json"
     if path.exists(userpath):
-        with open(userpath,"r") as read_file:
+        with open(userpath,"r") as read_file: # using with auto closes the file after.
             data = json.load(read_file)
             if playlist_name in data:
                 songlist = data[playlist_name]
@@ -141,3 +141,27 @@ def play_playlist(ctx,playlist_name): # loads songs from a playlist to be parsed
                 return False #return false if playlist doesnt exist which will be caught by music.py and output playlist doesnt exist.
     else:
         return False #same as above comment
+
+def rename_playlist(ctx,raw_input) -> bool:
+    userpath = os.path.join("Playlist",str(ctx.author.id)) 
+    userpath = str(userpath) + ".json"
+    splitNames = raw_input.split(',')
+    try:
+        if splitNames[0] is not None and splitNames[1] is not None:
+            data = ""
+            specific = ""
+            try:
+                with open(userpath,"r") as fileRead:
+                    data = json.load(fileRead)
+                    specific = data[splitNames[0]]
+                with open(userpath,"w") as fileRead:
+                    data.pop(splitNames[0]) #pop off old playlist 
+                    data[splitNames[1]] = specific #store the same data as a new list.
+                    dataFinal = json.dumps(data, indent = 1)
+                    help_newplaylist(ctx,dataFinal)
+                    return "Success"
+            except Exception as error:
+                print(error)
+                return "No-List"
+    except Exception as error:
+        return "Invalid-Input"
