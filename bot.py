@@ -5,12 +5,14 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 from discord.ext import commands
+intents = discord.Intents.default() # New requirement for the welcome function
+intents.members = True
 ## Robert A. USF Computer Science: 
 ## Python discord bot with limited administration commands and an array of
 ## music playing commands, along with a new welcome/auto role function.
 
 Serverinformation = """
-Discord Music Bot Version 1.1:
+Discord Music Bot Version 1.1.1:
 All commands need the prefix "." in order to run. use .help to see all commands and .help play ,
 for example will show information about the play command.
 To use the "Admin" functions the user must have "kick" "ban" permissions for some or a role by the name of "Administrator" for others.
