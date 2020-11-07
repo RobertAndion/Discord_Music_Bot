@@ -210,5 +210,12 @@ class music(commands.Cog):
         except Exception as error:
             await ctx.channel.send("Nothing playing.")
 
+    @commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
+    @commands.has_permissions(ban_members=True, kick_members=True, manage_roles=True, administrator=True)
+    async def disconnect_player(self, ctx):
+        player = self.bot.music.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+        await self.bot.music.player_manager.destroy(int(ctx.guild.id))
+        await ctx.channel.send("Bot player has been cleared successfully.")
+
 def setup(bot):
     bot.add_cog(music(bot))

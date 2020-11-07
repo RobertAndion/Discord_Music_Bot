@@ -124,6 +124,13 @@ it will print a message when it is completely done.
 This function will rename an existing playlist. The names must be seperated by a comma
 and no spaces before or after the comma. 
 
+**NEW**
+
+.clearbotcache ----------
+This will clear the player cache from your server. Do not do this for minor issues, try restarting the bot first,
+or kicking it and reinviting it. This command can currupt data, the bot MUST be disconnected before using this.
+Furthermore for the safety of this command it is restricted to those with administrator permissions only.
+
 All the functions in fileRead are used by commands and require no command to use. 
 
 ADMIN COMMANDS:
@@ -158,6 +165,9 @@ The Administration functions can be removed if undesired by deleting Admin.py fr
 
 WELCOME FUNCTIONS:
 
+NEW: In order to use the welcome functions you must enable "Privileged Gateway Intents" on the discord developer page under the Bot section. Enable the
+"SERVER MEMBERS INTENT" this will allow the function to welcome new members.
+
 These are automated functions that will activate on a new member joining. They will be greeted in your "general" chat
 and given the role "Example" automatically. These should be changed to your unique needs, and the role should be created and customized in your server first.
 If you do not want automatic roles the two lines to remove are marked in the welcome.py file. There are also comments there that 
@@ -177,8 +187,13 @@ however most servers have a general chat. The name of the user and of the server
 The welcome functions can be removed by deleting line 30 in bot.py and deleting welcome.py.
 'client.load_extension('welcome')' This is the command that loads in the Cog.
 
+**NEW**
+
+Also you must delete line 8 and 9 from bot.py to remove discord intents if you do not want to use welcome functions.
+
 
 Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
 Add a timer to the pause command.
+Add the option to customize the message and role given through discord commands.
