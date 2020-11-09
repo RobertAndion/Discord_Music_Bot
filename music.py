@@ -5,6 +5,8 @@ from discord import utils
 from discord import Embed
 import fileRead
 import re
+import asyncio
+
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 """
@@ -129,6 +131,10 @@ class music(commands.Cog):
                 if player.is_playing:
                     await ctx.channel.send("Song has been paused.")
                     await player.set_pause(True)
+                await asyncio.sleep(420) # Wait this long to unpause. (can overlap commands if pause used in succession too quickly)
+                if player.paused:
+                    await player.set_pause(False) # If paused unpause.
+
                 else:
                     await ctx.channel.send("No song is playing to be paused.")
             else:
