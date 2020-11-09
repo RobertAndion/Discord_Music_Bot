@@ -69,8 +69,10 @@ This command will disconnect the bot, however it is bad practice in most cases.
 It will not stop the playing of songs or clear the queue. clear is the preferred command.
 
 .pause (ps) -----------------
-This command is a useful one to pause the bot. In current code it will never unpause 
-on its own, you must upause or clear. I plan to upgrade this in future releases.
+This command is a useful one to pause the bot. The command has now been update.
+It will now unpause automatically after 7 minutes of being paused. This can be changed
+manually under the pause command. change the sleep(number of seconds here) to any amount of time.
+Other commands can still be used including unpause during this "wait" period.
 
 .unpause (resume,start,up) -------------
 This will unpause a currently paused bot. (Should come after a pause command)
