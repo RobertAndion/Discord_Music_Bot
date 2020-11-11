@@ -23,7 +23,7 @@ class music(commands.Cog):
         self.bot.music.add_event_hook(self.track_hook)
 
     
-    @commands.command(name = 'play', description=".play {song name} to play a song, will connect the bot.") #Allows for a song to be played, does not make sure people are in the same chat. Harder to implement.
+    @commands.command(name = 'play', description=".play {song name} to play a song, will connect the bot.") #Allows for a song to be played, does not make sure people are in the same chat.
     @commands.has_any_role('Dj','Administrator','DJ')
     async def play_song(self, ctx, *, query):
         member = utils.find(lambda m: m.id == ctx.author.id, ctx.guild.members) # This will connect the bot if it is not already connected.
@@ -33,6 +33,9 @@ class music(commands.Cog):
             if not player.is_connected:
                 player.store('channel',ctx.channel.id) #used so we have the ctx.channel usage
                 await self.connect_to(ctx.guild.id, str(vc.id))
+
+            if player.is_connected and not ctx.author.voice.channel.id == int(player.channel_id): #Make sure the person is in the same channel as the bot to add to queue.
+                return await ctx.channel.send("Please connect to the same chat as the bot.") 
 
             try:
                 query = query.strip('<>')

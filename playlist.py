@@ -118,6 +118,9 @@ class playlist(commands.Cog):
                 player.store('channel',ctx.channel.id)
                 await self.connect_to(ctx.guild.id, str(vc.id))
 
+            if player.is_connected and not ctx.author.voice.channel.id == int(player.channel_id): #Make sure the person is in the same chat as the bot to add to queue.
+                return await ctx.channel.send("Please connect to the same chat as the bot.") 
+
             for query in songlist:
                 try:
                     if ctx.author.voice is not None:
