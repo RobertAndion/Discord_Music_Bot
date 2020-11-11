@@ -129,7 +129,6 @@ class playlist(commands.Cog):
                         try:
                             track = results['tracks'][0]
                             player.add(requester=ctx.author.id, track=track)
-                            track_title = track["info"]["title"]
                             if not player.is_playing:
                                 await player.play()
                                 
