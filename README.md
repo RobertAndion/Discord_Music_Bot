@@ -65,7 +65,7 @@ Admin functions will either need kick ban permissions for some commands or an "A
 role. Everything is essentially role based to keep unwanted users from flooding the bot.
 
 ## COMMAND DOCUMENTATION:
-# NOTE: 
+### NOTE: 
 Anything in <> is an argument required by the function. Anything in () are alternate command shortcuts/names
 ```
 .setup
