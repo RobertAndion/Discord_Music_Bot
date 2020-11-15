@@ -19,11 +19,35 @@ https://pypi.org/project/python-dotenv/
 https://pypi.org/project/discord.py/
 https://github.com/Devoxin/Lavalink.py
 
+### NEW, Optional
+In order to use the new Reboot command you need to run the bot using tumx.
+Installing tmux is simple
+
+#### Debian:
+```
+sudo apt-get install tmux
+```
+
+#### Arch:
+```
+sudo pacman -S tmux
+```
+
+### Startup:
+
+In order to start the bot run
+```
+sh startup.sh
+```
+This will set up tmux with the proper session names in order to use the scripts provided.
+This is a helpful new feature thats saves the time of having to log into the bot and reboot it manually.
+Many issues are quickly solved with a reboot.
+
 Lava link is not my creation and can be found at:
 lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 https://github.com/Frederikam/Lavalink/releases
 
-### Running the bot
+### Running the bot (Without the reboot command compatibility):
 run the lavalink server using the command : java -jar lavalink.jar
 Then run the bot in a separate terminal using: python bot.py
 Both terminals must remain running for the bot to be live, consider using tmux.
@@ -47,6 +71,15 @@ NOTE: Anything in <> is an argument required by the function. Anything in () are
 ```
 This command, if you are a server admin, will send you a private message with a short summary of how to use the bot.
 It has no other function,
+
+```
+.reboot
+```
+This command will reboot both Lavalink and the bot directly from discord. 
+Right now it requires administrator permissions but in the future it will be tied to the
+owners discord ID so only the server owner may reboot. 
+Please read more about how to set it up above.
+*To not use this function remove line 4, and 40-44 in bot.py*
 
 ```
 .play <SONG-NAME>
@@ -174,8 +207,6 @@ This will clear the player cache from your server. Do not do this for minor issu
 or kicking it and reinviting it. This command can currupt data, the bot MUST be disconnected before using this.
 Furthermore for the safety of this command it is restricted to those with administrator permissions only.
 
-### All the functions in fileRead are used by commands and require no command to use. 
-
 ## ADMIN COMMANDS:
 ### NOTE: 
 These require either "Administrator" or "Admin" commands for more advanced commands while intuitive
@@ -246,11 +277,12 @@ The welcome functions can be removed by deleting line 30 in bot.py and deleting 
 'client.load_extension('welcome')' This is the command that loads in the Cog.
 You must also delete line 8 and 9 from bot.py to remove discord intents if you do not want to use welcome functions.
 
+### All the functions in fileRead are used by commands and require no command to use. 
+
 
 Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
 Add a timer to the pause command. Done.
 Add the option to customize the message and role given through discord commands. Future update coming.
-Add the option to restart the bot and lavalink from commands through discord. (Many issues solved by a reboot),
-it would be easier to be able to restart from discord. (Possible future addition.)
+Add the option to restart the bot and lavalink from commands through discord. Done.
