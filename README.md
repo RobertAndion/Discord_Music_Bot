@@ -41,7 +41,7 @@ Admin functions will either need kick ban permissions for some commands or an "A
 role. Everything is essentially role based to keep unwanted users from flooding the bot.
 
 ## COMMAND DOCUMENTATION:
-NOTE: Anything in <> is an argument required by the function. Anything in () are alternate command shortcuts/names-------
+NOTE: Anything in <> is an argument required by the function. Anything in () are alternate command shortcuts/names
 ```
 .setup
 ```
@@ -160,7 +160,7 @@ This will play the entire playlist name given. Case sensitive. It will take some
 it will print a message when it is completely done.
 
 ```
-.renameplaylist <current name,new name> (rpl) -----------
+.renameplaylist <current name,new name> (rpl)
 ```
 This function will rename an existing playlist. The names must be seperated by a comma
 and no spaces before or after the comma. 
@@ -233,8 +233,8 @@ NOTE: The role will follow any server you add it to and fail. If you plan to hav
 of the current two lines for the role.
 ```
 if servername == "YourServerHere":
-            role = get(member.guild.roles, name = serverrolename) #Remove this line and below to not add a role to a new user
-            await member.add_roles(role)                          #Remove me if you remove the line above.
+    role = get(member.guild.roles, name = serverrolename)   #Remove this line and below to not add a role to a new user  
+    await member.add_roles(role)    #Remove me if you remove the line above.  
 ```
 
 This will make it so the role function only applies to your server. You can put the greeting under this protection as well,
