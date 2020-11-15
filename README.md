@@ -20,7 +20,7 @@ https://pypi.org/project/discord.py/
 https://github.com/Devoxin/Lavalink.py
 
 Lava link is not my creation and can be found at:
-lavalink.jar MUST BE DOWNLOADED AND PLACED IN DIRECTORY
+lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 https://github.com/Frederikam/Lavalink/releases
 
 ### Running the bot
