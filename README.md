@@ -1,5 +1,5 @@
 # Discord Music Bot 
-### created by Robert Andion USF Computer Science.
+### Created by Robert USF Computer Science.
 
 This is a personal project of mine to create an easy to use and reliable discord music bot.
 I hope you can find use in it as well!
@@ -32,7 +32,7 @@ Before many commands will work an initial "play" command will need to be made. O
 it will not need to be redone for the entirety of the bots run time. (This may have been fixed)
 
 
-# SETUP:
+## SETUP:
 In order for music commands you must make a "Dj", "Administrator" or "DJ" role
 and assign it to those you want to be able to play songs. 
 (Future releases will have variable role names you can set in the code)
@@ -40,7 +40,7 @@ and assign it to those you want to be able to play songs.
 Admin functions will either need kick ban permissions for some commands or an "Admin" or "Administrator"
 role. Everything is essentially role based to keep unwanted users from flooding the bot.
 
-# COMMAND DOCUMENTATION:
+## COMMAND DOCUMENTATION:
 NOTE: Anything in <> is an argument required by the function. Anything in () are alternate command shortcuts/names-------
 ```
 .setup
@@ -112,8 +112,8 @@ it will continue to shuffle forever untill you do stopshuffle. (unshuffled by de
 ```
 This will stop the shuffle command and return the function to the default state of unshuffled.
 
-# PLAYLIST COMMANDS:
-## NOTE: 
+## PLAYLIST COMMANDS:
+### NOTE: 
 All playlists are stored by the discord ID with file extension .json, also all servers will be stored in the same folder, 
 in the future server ID specific folders will likely be added. Also all 
 commands are "currently playing" based. Keep this in mind when working with playlists.
@@ -176,8 +176,8 @@ Furthermore for the safety of this command it is restricted to those with admini
 
 ### All the functions in fileRead are used by commands and require no command to use. 
 
-# ADMIN COMMANDS:
-## NOTE: 
+## ADMIN COMMANDS:
+### NOTE: 
 These require either "Administrator" or "Admin" commands for more advanced commands while intuitive
 ones like ban and kick only require those permissions.
 
@@ -215,11 +215,11 @@ This will move the given user into the channel name listed. Requires the "Admini
 ```
 This will disconnect the named user from voice channels. Requires the "Administrator" or "Admin" role.
 
-### The Administration functions can be removed if undesired by deleting Admin.py from the directory and removing line 29 from bot.py 
-### 'client.load_extension('Admin')' This is the command that loads in the Cog.
+##### The Administration functions can be removed if undesired by deleting Admin.py from the directory and removing line 29 from bot.py 
+##### 'client.load_extension('Admin')' This is the command that loads in the Cog.
 
 
-# WELCOME FUNCTIONS:
+## WELCOME FUNCTIONS:
 
 **NEW:** In order to use the welcome functions you must enable "Privileged Gateway Intents" on the discord developer page under the Bot section. Enable the
 "SERVER MEMBERS INTENT" this will allow the function to welcome new members.
