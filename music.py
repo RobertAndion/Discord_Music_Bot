@@ -86,7 +86,7 @@ class music(commands.Cog):
                             await ctx.channel.send("Song skipped.")
                 else:
                     return await ctx.channel.send("Please join the same voice channel as me.")
-        except Exception as error:
+        except:
             return await ctx.channel.send("Nothing playing.")
 
     @commands.command(name = "clear",description="Clears all of the currently playing songs and makes the bot disconnect.")
@@ -103,7 +103,7 @@ class music(commands.Cog):
                     await ctx.channel.send("Nothing playing to clear.")
             else: 
                 await ctx.channel.send("Please join the same voice channel as me.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Nothing playing.")
 
     # may remove this as it is depricated by clear, a safer alternative.
@@ -121,7 +121,7 @@ class music(commands.Cog):
                     await self.connect_to(guild_id,None)
             else: 
                 await ctx.channel.send("Please join the same voice channel as me.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Nothing playing.")
 
 
@@ -132,17 +132,26 @@ class music(commands.Cog):
             player = self.bot.music.player_manager.get(ctx.guild.id)
             if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
                 if player.is_playing:
+                    status = True
                     await ctx.channel.send("Song has been paused.")
                     await player.set_pause(True)
-                await asyncio.sleep(420) # Wait this long to unpause. (can overlap commands if pause used in succession too quickly)
-                if player.paused:
-                    await player.set_pause(False) # If paused unpause.
+                    i = 0
+                    while i < 84: # This will periodically check to see if it has been unpaused
+                        await asyncio.sleep(5) 
+                        i = i + 1
+                        if not player.paused: # If its been unpaused no need to keep counting. (Also fixes some issues)
+                            status = False
+                            break
+
+                    if player.paused and player.is_playing and status is True:
+                        await player.set_pause(False) # If paused unpause.
+                        await ctx.channel.send("Automatically unpaused.")
 
                 else:
                     await ctx.channel.send("No song is playing to be paused.")
             else:
                 await ctx.channel.send("Please join the same voice channel as me.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Nothing playing.")
 
     @commands.command(name='unpause', aliases=['resume','start','up'],description="Unpauses a paused song.") #command to unpause currently paused music
@@ -158,7 +167,7 @@ class music(commands.Cog):
                     await ctx.channel.send("Nothing is paused to resume.")
             else:
                 await ctx.channel.send("Please join the same voice channel as me.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Nothing playing.")
 
 
@@ -197,7 +206,7 @@ class music(commands.Cog):
                     await ctx.channel.send("No music playing.")
             else:
                 await ctx.channel.send("Please join my channel to shuffle.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Nothing playing.")
 
     @commands.command(name = "stopshuffle",aliases = ["unshuffle"],description="Ends the shuffling of all songs.")
@@ -216,7 +225,7 @@ class music(commands.Cog):
                     await ctx.channel.send("No music is playing.")
             else:
                 await ctx.channel.send("Please join my channel to unshuffle.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Nothing playing.")
 
     @commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
