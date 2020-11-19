@@ -173,18 +173,39 @@ class music(commands.Cog):
 
     @commands.command(name='queue',aliases=['playlist','songlist','upnext'],description="Shows songs up next in order, with the currently playing at the top.") # display the songs in the order they are waiting to play
     @commands.has_any_role('Dj','Administrator','DJ')
-    async def queue(self,ctx):
+    async def queue(self,ctx, page = 1):
+        if not isinstance(page, int): # Stop here if the page is not a valid number (save processing time).
+            return ctx.channel.send("Please enter a valid number.")
+
         player = self.bot.music.player_manager.get(ctx.guild.id)
         if player.is_playing:
             songlist = player.queue
+            list_collection = []
             complete_list = ''
             complete_list = complete_list + "NP: " +  player.current['title'] + "\n"
             i = 0
             for song in songlist:
                 complete_list = complete_list + f"{i + 1}: {song['title']}\n"
                 i = i + 1
+                if i % 10 == 0: # Break into pages of 10 and add to a collection
+                    list_collection.append(complete_list)
+                    complete_list = ''
+
+            if i % 10 != 0: # Check for the case where it is not a perfect multiple, add "half page" (< 10)
+                list_collection.append(complete_list)
+
+            selection = page - 1
             embed = Embed()
-            embed.description = complete_list
+            # add an inital if to check if it is an int then do page -1 if its not int default to page 0
+            if int(selection) < 0: # handle negative number
+                list_collection[0] += "Page: 1/" + str(len(list_collection))
+                embed.description = list_collection[0]
+            elif int(selection) > len(list_collection) - 1: # Handle a case where the index is greater than page amount
+                list_collection[len(list_collection) - 1] += "Page: " + str(len(list_collection)) + "/" + str(len(list_collection))
+                embed.description = list_collection[len(list_collection) - 1]
+            else: # Handle a valid input case.
+                list_collection[selection] += "Page: " + str(page) + "/" + str(len(list_collection))
+                embed.description = list_collection[selection]
             await ctx.channel.send(embed=embed)
         else:
             await ctx.channel.send("Nothing is queued.")
