@@ -38,7 +38,7 @@ async def setup(ctx):
     await ctx.author.send(Serverinformation)
 
 @client.command(name="reboot")
-@commands.has_permissions(administrator=True)
+@commands.is_owner() # Now only the bot owner can call reboot.
 async def reboot(ctx):
     await ctx.channel.send("Rebooting")
     subprocess.call(["sh","./autorestart.sh"])
