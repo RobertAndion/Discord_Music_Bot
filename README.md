@@ -127,12 +127,16 @@ Other commands can still be used including unpause during this "wait" period.
 ```
 This will unpause a currently paused bot. (Should come after a pause command)
 
+**NEW**
+
 ```
-.queue (playlist,songlist,upnext)
+.queue <OPTIONAL page number> (playlist,songlist,upnext)
 ```
-This will list all songs to be played next (one continuous list) with the currently playing
-song at the top labeld as NP: this has replaced the now playing function however it is 
-still commented out in the code to be removed in future releases.
+This will list all songs to be played next in pages of 10 with the currently playing
+song at the top of page 1 labeled as NP. The current page and total pages are displayed 
+at the bottom, like so, Page: 5/6 means you are on page 5 out of a total of 6 pages. 
+No argument assumes page one, negative or 0 goes to page 1 and a page larger than the total
+goes to the last page. 
 
 ```
 .shuffle
@@ -198,8 +202,6 @@ it will print a message when it is completely done.
 ```
 This function will rename an existing playlist. The names must be seperated by a comma
 and no spaces before or after the comma. 
-
-**NEW**
 
 ```
 .clearbotcache
