@@ -191,7 +191,7 @@ class music(commands.Cog):
                     list_collection.append(complete_list)
                     complete_list = ''
 
-            if i % 10 != 0: # Check for the case where it is not a perfect multiple, add "half page" (< 10)
+            if i % 10 != 0 or i == 0: # Check for the case where it is not a perfect multiple, add "half page" (< 10) or if there is only one song playing
                 list_collection.append(complete_list)
 
             selection = page - 1
