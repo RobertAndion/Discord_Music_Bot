@@ -16,6 +16,20 @@ def logUpdate(ctx, songName): #automatically logs all songs played by a user in 
     user_write.write(str(songName) + "\n")
     user_write.close()
 
+def page_format(raw_input) -> list:
+    list_collection = []
+    i = 0
+    temp = ''
+    for song in raw_input.splitlines():
+        temp = temp + '\n' + song
+        i = i + 1
+        if i % 10 == 0: # Break into pages of 10 and add to a collection
+            list_collection.append(temp)
+            temp = ''
+
+    if i % 10 != 0: # Check for the case where it is not a perfect multiple, add "half page" (< 10)
+        list_collection.append(temp)
+    return list_collection
 
 def playlist_read(listname,ctx):
     userpath = os.path.join("Playlist",str(ctx.author.id)) 
@@ -29,10 +43,9 @@ def playlist_read(listname,ctx):
             for item in specific:
                 final += str(i) + ": " + item + "\n"
                 i = i + 1
-            return final
-    except Exception as error:
-        return "Failed-Process"
-        print (error)
+            return page_format(final)
+    except:
+        return []
 
 
 def list_playlist(ctx): #function to list all of the users playlists.
@@ -46,9 +59,10 @@ def list_playlist(ctx): #function to list all of the users playlists.
             for key in data:
                 final+= str(i) + ": " + key + "\n"
                 i = i + 1
-            return final
-    except Exception as error:
-        return "Failed-Process"
+                
+            return page_format(final)
+    except:
+        return []
 
 
 def new_playlist(ctx,playlist_name,now_playing): #function to create a new playlist in the JSON file or make a JSON file if none exists for the user
@@ -73,8 +87,6 @@ def help_newplaylist(ctx,data): #has no safety checks to write. needs to be done
     file = open(userpath,"w")
     file.write(data)
     file.close()
-    #with open(userpath,"w") as write_file: Alternative way to open the file.
-        #json.dump(data,write_file) This will not work as intended.
 
 def delete_playlist(ctx,playlist_name):
     userpath = os.path.join("Playlist",str(ctx.author.id)) 
@@ -87,7 +99,7 @@ def delete_playlist(ctx,playlist_name):
                 dataFinal = json.dumps(data, indent = 1)
                 help_newplaylist(ctx,dataFinal)
                 return "Done"
-            except Exception as error:
+            except:
                 return "Not-Found"
     else: 
         return "No-Playlists"
@@ -104,7 +116,7 @@ def delete_from_playlist(ctx, playlist_name,selection):
                 dataFinal = json.dumps(data, indent = 1)
                 help_newplaylist(ctx,dataFinal)
                 return "Done"
-            except Exception as error:
+            except:
                 return "Not-Found"
                 
     else: 
@@ -124,7 +136,7 @@ def add_to_playlist(ctx,playlist_name,now_playing) -> bool: # Reads json, finds 
                 help_newplaylist(ctx,dataFinal)
                 return True
 
-        except Exception as error:
+        except:
             return False
 
 
@@ -160,8 +172,7 @@ def rename_playlist(ctx,raw_input) -> bool:
                     dataFinal = json.dumps(data, indent = 1)
                     help_newplaylist(ctx,dataFinal)
                     return "Success"
-            except Exception as error:
-                print(error)
+            except:
                 return "No-List"
-    except Exception as error:
+    except:
         return "Invalid-Input"

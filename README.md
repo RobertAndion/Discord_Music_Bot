@@ -155,17 +155,24 @@ This will stop the shuffle command and return the function to the default state 
 All playlists are stored by the discord ID with file extension .json, also all servers will be stored in the same folder, 
 in the future server ID specific folders will likely be added. Also all 
 commands are "currently playing" based. Keep this in mind when working with playlists.
- 
+
+**Updated**
 ```
-.viewplaylist <Playlist name, case sensitive.> (vpl)
+.viewplaylist <Playlist name, case sensitive., OPTIONAL page number> (vpl)
 ```
 This will list the specific songs contained inside the specified playlist.
-Nothing needs to be playing to use this command.
+Nothing needs to be playing to use this command. If you have more than 20 songs in a playlist,
+they will now send in pages of 20 to avoid "invisible" playlists if they are too big.
+(No need to be in a voice channel to use this command)
 
+**Updated**
 ```
-.listplaylists (lpl)
+.listplaylists <OPTIONAL page number> (lpl)
 ```
 This will list all of the users playlists whether or not the user is in a voice channel.
+The playlists will now show up in pages of 10, if you have more than 10 playlists
+provide the page number you wish to go to after lpl (page total listed on the bottom
+similar to the queue command.)
 
 ```
 .deleteplaylist <Playlist name> (dpl)
@@ -280,12 +287,12 @@ The welcome functions can be removed by deleting line 30 in bot.py and deleting 
 'client.load_extension('welcome')' This is the command that loads in the Cog.
 You must also delete line 8 and 9 from bot.py to remove discord intents if you do not want to use welcome functions.
 
-### All the functions in fileRead are used by commands and require no command to use. 
+### All the functions in fileRead are used by commands and require no command to use (Helper functions). 
 
 
 Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
-Add a timer to the pause command. Done.
 Add the option to customize the message and role given through discord commands. Future update coming.
-Add the option to restart the bot and lavalink from commands through discord. Done.
+Custom shuffle function where the queue shows the future results is a possibility, hard shuffle? leaving the 
+regular shuffle and unshuffle intact? Possible future update.
