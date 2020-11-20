@@ -1,6 +1,7 @@
 from discord.ext import commands
 import discord
 import lavalink
+import asyncio
 from discord import utils
 from discord import Embed
 import fileRead
@@ -21,13 +22,27 @@ class playlist(commands.Cog):
     @commands.command(name = "viewplaylist", aliases = ["vpl"],description="Views all songs inside of a given playlist.")
     @commands.has_any_role("DJ",'Dj','Administrator')
     async def view_playlist(self,ctx,*,list_name):
-        formattedString = fileRead.playlist_read(list_name,ctx)
-        if formattedString != "Failed-Process":
+        list_collection = fileRead.playlist_read(list_name,ctx)
+        if list_collection:
             try: 
                 embed = Embed()
-                embed.description = formattedString
-                await ctx.channel.send(embed=embed)
-            except Exception as error:
+                double = ''
+                x = 1
+                for section in list_collection:
+                    double += section
+
+                    if x % 2 == 0:
+                        embed.description = double
+                        await ctx.channel.send(embed=embed)
+                        asyncio.sleep(1)
+                        double = ''
+                    x = x + 1
+                    
+                if len(list_collection) % 2 != 0:
+                    embed.description = double
+                    await ctx.channel.send(embed=embed)
+                
+            except:
                 await ctx.channel.send("Playlist not found.")
         else:
             await ctx.channel.send("Playlist is empty or does not exist.")
@@ -35,14 +50,27 @@ class playlist(commands.Cog):
 
     @commands.command(name="listplaylists",aliases=["lpl"],description="Lists all of a users playlists")
     @commands.has_any_role("Dj","DJ","Administrator")
-    async def list_playlists(self,ctx):
-        output = fileRead.list_playlist(ctx)
-        if output != "Failed-Process":
+    async def list_playlists(self,ctx,page = 1):
+        if not isinstance(page, int): # Stop here if the page is not a valid number (save processing time).
+            return ctx.channel.send("Please enter a valid number.")
+
+        list_collection = fileRead.list_playlist(ctx)
+        if list_collection:
             try:
+                selection = page - 1
                 embed = Embed()
-                embed.description = output
+                if int(selection) < 0: # handle negative number
+                    list_collection[0] += "'\n' + Page: 1/" + str(len(list_collection))
+                    embed.description = list_collection[0]
+                elif int(selection) > len(list_collection) - 1: # Handle a case where the index is greater than page amount
+                    list_collection[len(list_collection) - 1] += "'\n' + Page: " + str(len(list_collection)) + "/" + str(len(list_collection))
+                    embed.description = list_collection[len(list_collection) - 1]
+                else: # Handle a valid input case.
+                    list_collection[selection] += '\n' + "Page: " + str(page) + "/" + str(len(list_collection))
+                    embed.description = list_collection[selection]
+
                 await ctx.channel.send(embed=embed)
-            except Exception as error:
+            except:
                 await ctx.channel.send("Failed to list playlists.")
         else:
             await ctx.channel.send("No playlists found, do you have any?")
@@ -71,7 +99,7 @@ class playlist(commands.Cog):
                 await ctx.channel.send("Song not found.")
             elif result == "No-Playlists":
                 await ctx.channel.send("You have no playlists.")
-        except Exception as error:
+        except:
             await ctx.channel.send("Playlist not found.")
        
 
@@ -132,7 +160,7 @@ class playlist(commands.Cog):
                             if not player.is_playing:
                                 await player.play()
                                 
-                        except Exception as error:
+                        except:
                             await ctx.channel.send("Song not found. (or title has emojis/symbols)")
 
                 except Exception as error:
