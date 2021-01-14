@@ -10,7 +10,7 @@ You must place all of the files in the same directory in order for this to work.
 If you want to change the lavalink password you must change it in the application.yml
 and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
 
-You must also place your discord bot token in the .env file where prompeted.
+You must also place your discord bot token in the .env file where prompted.
 
 ### Dependancies:
 You must have java 11 (or java 13) for lavalink.
@@ -20,7 +20,7 @@ https://pypi.org/project/discord.py/
 https://github.com/Devoxin/Lavalink.py
 
 ### NEW, Optional
-In order to use the new Reboot command you need to run the bot using tumx.
+In order to use the new Reboot command you need to run the bot using tmux.
 Installing tmux is simple
 
 #### Debian:
