@@ -10,7 +10,7 @@ You must place all of the files in the same directory in order for this to work.
 If you want to change the lavalink password you must change it in the application.yml
 and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
 
-You must also place your discord bot token in the .env file where prompted.
+Important: You must also place your discord bot token in the .env file where prompted.
 
 ### Dependancies:
 You must have java 11 (or java 13) for lavalink.
@@ -127,8 +127,6 @@ Other commands can still be used including unpause during this "wait" period.
 ```
 This will unpause a currently paused bot. (Should come after a pause command)
 
-**NEW**
-
 ```
 .queue <OPTIONAL page number> (playlist,songlist,upnext)
 ```
@@ -138,13 +136,15 @@ at the bottom, like so, Page: 5/6 means you are on page 5 out of a total of 6 pa
 No argument assumes page one, negative or 0 goes to page 1 and a page larger than the total
 goes to the last page. 
 
+**Updated**
 ```
 .shuffle
 ```
-This will shuffle the songs, although it will not show up this way on a queue command.
-The order remains the same but the song picked is random. Good in tandem with the playlists,
-it will continue to shuffle forever untill you do stopshuffle. (unshuffled by default) 
+This no longer uses the given shuffle function from lavalink.
+It is a custom function that shuffles in a finalized form,
+viewable in the queue command.
 
+**Removed**
 ```
 .stopshuffle (unshuffle)
 ```
@@ -156,7 +156,6 @@ All playlists are stored by the discord ID with file extension .json, also all s
 in the future server ID specific folders will likely be added. Also all 
 commands are "currently playing" based. Keep this in mind when working with playlists.
 
-**Updated**
 ```
 .viewplaylist <Playlist name, case sensitive., OPTIONAL page number> (vpl)
 ```
@@ -165,7 +164,6 @@ Nothing needs to be playing to use this command. If you have more than 20 songs 
 they will now send in pages of 20 to avoid "invisible" playlists if they are too big.
 (No need to be in a voice channel to use this command)
 
-**Updated**
 ```
 .listplaylists <OPTIONAL page number> (lpl)
 ```
@@ -262,7 +260,7 @@ This will disconnect the named user from voice channels. Requires the "Administr
 
 ## WELCOME FUNCTIONS:
 
-**NEW:** In order to use the welcome functions you must enable "Privileged Gateway Intents" on the discord developer page under the Bot section. Enable the
+In order to use the welcome functions you must enable "Privileged Gateway Intents" on the discord developer page under the Bot section. Enable the
 "SERVER MEMBERS INTENT" this will allow the function to welcome new members.
 
 These are automated functions that will activate on a new member joining. They will be greeted in your "general" chat
@@ -296,3 +294,5 @@ Todo/Possible adds in the future:
 Add the option to customize the message and role given through discord commands. Future update coming.
 Custom shuffle function where the queue shows the future results is a possibility, hard shuffle? leaving the 
 regular shuffle and unshuffle intact? Possible future update.
+
+Update: The custom function for shuffling has been done.

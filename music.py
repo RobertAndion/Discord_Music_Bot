@@ -3,6 +3,7 @@ import discord
 import lavalink
 from discord import utils
 from discord import Embed
+import random
 import fileRead
 import re
 import asyncio
@@ -210,8 +211,34 @@ class music(commands.Cog):
         else:
             await ctx.channel.send("Nothing is queued.")
 
+    @commands.command(name = "shuffle",description = "New shuffle function that has to be called once and makes a new queue. Result is shown on \"queue\" commands now..")
+    @commands.has_any_role("Dj","DJ","Administrator")
+    async def shuffle(self,ctx):
+        try:
+            player = self.bot.music.player_manager.get(ctx.guild.id)
+            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
+                if player.is_playing:
+                    songlistOG = player.queue
+                    songlist = []
+                    for song in songlistOG:
+                        songlist.append(song)
+                    songlist.append(player.current)
+                    size = len(songlist)
+                    random.shuffle(songlist)
+                    for song in songlist:
+                        player.add(requester=ctx.author.id, track=song) 
+
+                    for x in range(0,size):
+                        await player.skip()
+                    await ctx.channel.send("Finished.")
+                else:
+                    await ctx.channel.send("Nothing playing!")
+            else:
+                await ctx.channel.send("Please join the same voice channel as me and ensure something is playing.")
+        except Exception as error:
+            print(error)
     
-    @commands.command(name = "shuffle",description = "Indefinetely shuffles the songs to be played.")
+    """@commands.command(name = "shuffle",description = "Indefinetely shuffles the songs to be played.")
     @commands.has_any_role("Dj","DJ","Administrator")
     async def shuffle(self,ctx):
         try:
@@ -248,7 +275,7 @@ class music(commands.Cog):
                 await ctx.channel.send("Please join my channel to unshuffle.")
         except:
             await ctx.channel.send("Nothing playing.")
-
+        """
     @commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
     @commands.has_permissions(ban_members=True, kick_members=True, manage_roles=True, administrator=True)
     async def disconnect_player(self, ctx):
