@@ -190,6 +190,19 @@ class playlist(commands.Cog):
         elif status == "Invalid-Input":
             await ctx.channel.send("Please format the command properly. .rpl current name,new name (MANDATORY COMMA)")
 
+    @commands.command(name="addqueuetolist",aliases = ["aqtp"],description="Adds the entire queue to a playlist.")
+    @commands.has_any_role("Dj","DJ","Administrator")
+    async def add_queue_to_list(self,ctx,*,listname):
+        player = self.bot.music.player_manager.get(ctx.guild.id)
+        if player.is_playing:
+            songlist = player.queue
+            for song in songlist:
+                check = fileRead.add_to_playlist(ctx,listname,f"{song['title']}")
+                if not check:
+                    return await ctx.channel.send("Operation failed. Make sure the playlist name is valid.")
+            await ctx.channel.send("Queue added to " + str(listname) + ".")
+        else :
+            await ctx.channel.send("There is nothing playing.")
 
 def setup(bot):
     bot.add_cog(playlist(bot))
