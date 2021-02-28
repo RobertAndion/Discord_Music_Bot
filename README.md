@@ -19,7 +19,7 @@ https://pypi.org/project/python-dotenv/
 https://pypi.org/project/discord.py/
 https://github.com/Devoxin/Lavalink.py
 
-### NEW, Optional
+### Optional
 In order to use the new Reboot command you need to run the bot using tmux.
 Installing tmux is simple
 
@@ -150,6 +150,13 @@ viewable in the queue command.
 ```
 This will stop the shuffle command and return the function to the default state of unshuffled.
 
+```
+.clearbotcache
+```
+This will clear the player cache from your server. Do not do this for minor issues, try restarting the bot (and/or Lavalink) first,
+or kicking it and reinviting it. This command can currupt data, the bot MUST be disconnected before using this.
+Furthermore for the safety of this command it is restricted to those with administrator permissions only.
+
 ## PLAYLIST COMMANDS:
 ### NOTE: 
 All playlists are stored by the discord ID with file extension .json, also all servers will be stored in the same folder, 
@@ -208,12 +215,13 @@ it will print a message when it is completely done.
 This function will rename an existing playlist. The names must be seperated by a comma
 and no spaces before or after the comma. 
 
+**NEW**
 ```
-.clearbotcache
+.addqueuetolist <Playlist name> (aqtp)
 ```
-This will clear the player cache from your server. Do not do this for minor issues, try restarting the bot (and/or Lavalink) first,
-or kicking it and reinviting it. This command can currupt data, the bot MUST be disconnected before using this.
-Furthermore for the safety of this command it is restricted to those with administrator permissions only.
+This function will add the entire queue to a given playlist.
+It does not add the currently playing song, this way if you make a playlist just for the queue,
+it will not add the currently playing song twice.
 
 ## ADMIN COMMANDS:
 ### NOTE: 
