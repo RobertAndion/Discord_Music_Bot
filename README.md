@@ -14,6 +14,7 @@ Important: You must also place your discord bot token in the .env file where pro
 
 ### Dependancies:
 You must have java 11 (or java 13) for lavalink.
+The bot is written in and requires Python3
 You must install python-dotenv, discord.py and lavalink.py links are listed below.
 https://pypi.org/project/python-dotenv/
 https://pypi.org/project/discord.py/
@@ -52,11 +53,17 @@ run the lavalink server using the command:
 ```
 java -jar lavalink.jar
 ```
-Then run the bot in a separate terminal using: python bot.py
+Then run the bot in a separate terminal using: 
+```
+python3 bot.py
+```
 Both terminals must remain running for the bot to be live, consider using tmux.
 
-Before many commands will work an initial "play" command will need to be made. Once this is done once
-it will not need to be redone for the entirety of the bots run time. (This may have been fixed)
+Before many commands will work, an initial "play" command will need to be made. Once this is done once
+it will not need to be redone for the entirety of the bots run time. This is not something to be fixed.
+The player object doesnt exist until at least one play related command has been issued in a session.
+Most commands have error handling for this now, run a play or playl command before trying to pause or 
+unpause etc. (makes logical sense anyways.)
 
 
 ## SETUP:
@@ -80,9 +87,9 @@ It has no other function.
 .reboot
 ```
 This command will reboot both Lavalink and the bot directly from discord. 
-Right now it requires administrator permissions but in the future it will be tied to the
-owners discord ID so only the server owner may reboot. 
+This command is tied to the owners discord ID so only the server owner may reboot. 
 Please read more about how to set it up above.
+Note: This function should be used before trying clearcache to fix bot errors.
 *To not use this function remove line 4, and 40-44 in bot.py*
 
 ```
@@ -106,15 +113,16 @@ This will clear all songs including now playing and the queue. This is the best 
 because it flushes everything first. Disconnect is still a command but will be removed in the future.
 
 ```
-.stop
+.stop 
 ```
-Removed completely now.
+Removed completely now, will be removed on next readme update/release.
 
 ```
 .disconnect (dc) 
 ```
 This command will disconnect the bot, however it is bad practice in most cases.
 It will not stop the playing of songs or clear the queue. clear is the preferred command.
+This will be removed on the next release of the bot.
 **Not reccomended**
 
 ```
@@ -153,12 +161,14 @@ viewable in the queue command.
 .stopshuffle (unshuffle)
 ```
 This will stop the shuffle command and return the function to the default state of unshuffled.
+This will be removed from the readme on the next release/update.
 
 ```
 .clearbotcache
 ```
+**Warning** This is to be used as a last resort ONLY. Better to reboot the bot.
 This will clear the player cache from your server. Do not do this for minor issues, try restarting the bot (and/or Lavalink) first,
-or kicking it and reinviting it. This command can currupt data, the bot MUST be disconnected before using this.
+or kicking it and reinviting it. This command can currupt data, the bot **MUST** be disconnected before using this.
 Furthermore for the safety of this command it is restricted to those with administrator permissions only.
 
 ## PLAYLIST COMMANDS:
@@ -168,7 +178,7 @@ in the future server ID specific folders will likely be added. Also all
 commands are "currently playing" based. Keep this in mind when working with playlists.
 
 ```
-.viewplaylist <Playlist name, case sensitive., OPTIONAL page number> (vpl)
+.viewplaylist <Playlist name (case sensitive), OPTIONAL page number> (vpl)
 ```
 This will list the specific songs contained inside the specified playlist.
 Nothing needs to be playing to use this command. If you have more than 20 songs in a playlist,
@@ -304,5 +314,5 @@ Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
 Add the option to customize the message and role given through discord commands. Future update coming.
-
+Add a delete from queue function that removes a specific song from the queue based on position.
 Update: The custom function for shuffling has been done.
