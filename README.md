@@ -48,7 +48,10 @@ lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 https://github.com/Frederikam/Lavalink/releases
 
 ### Running the bot (Without the reboot command compatibility):
-run the lavalink server using the command : java -jar lavalink.jar
+run the lavalink server using the command: 
+```
+java -jar lavalink.jar
+```
 Then run the bot in a separate terminal using: python bot.py
 Both terminals must remain running for the bot to be live, consider using tmux.
 
@@ -71,7 +74,7 @@ Anything in <> is an argument required by the function. Anything in () are alter
 .setup
 ```
 This command, if you are a server admin, will send you a private message with a short summary of how to use the bot.
-It has no other function,
+It has no other function.
 
 ```
 .reboot
@@ -105,14 +108,14 @@ because it flushes everything first. Disconnect is still a command but will be r
 ```
 .stop
 ```
-This is still in the code however it is commented out. It is an early method to stop the bot and pause
-or clear is much better, this will be removed completely in the future.
+Removed completely now.
 
 ```
-.disconnect (dc)
+.disconnect (dc) 
 ```
 This command will disconnect the bot, however it is bad practice in most cases.
 It will not stop the playing of songs or clear the queue. clear is the preferred command.
+**Not reccomended**
 
 ```
 .pause (ps)
@@ -126,6 +129,7 @@ Other commands can still be used including unpause during this "wait" period.
 .unpause (resume,start,up)
 ```
 This will unpause a currently paused bot. (Should come after a pause command)
+This will automatically happen after 7 minutes afte a pause command by default.
 
 ```
 .queue <OPTIONAL page number> (playlist,songlist,upnext)
@@ -300,7 +304,5 @@ Robert A -USF Computer Science
 
 Todo/Possible adds in the future:
 Add the option to customize the message and role given through discord commands. Future update coming.
-Custom shuffle function where the queue shows the future results is a possibility, hard shuffle? leaving the 
-regular shuffle and unshuffle intact? Possible future update.
 
 Update: The custom function for shuffling has been done.
