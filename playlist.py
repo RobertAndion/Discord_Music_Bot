@@ -34,7 +34,7 @@ class playlist(commands.Cog):
                     if x % 2 == 0:
                         embed.description = double
                         await ctx.channel.send(embed=embed)
-                        asyncio.sleep(1)
+                        await asyncio.sleep(1)
                         double = ''
                     x = x + 1
                     
@@ -148,9 +148,22 @@ class playlist(commands.Cog):
 
             if player.is_connected and not ctx.author.voice.channel.id == int(player.channel_id): #Make sure the person is in the same chat as the bot to add to queue.
                 return await ctx.channel.send("Please connect to the same chat as the bot.") 
+            try: # Check size on the first add in the playl command.
+                size = len(player.queue)
+                if size > 99: # This + 1 is the queue size limit, +1 more for currently playing. so maximum here is 101 songs including current.
+                    return await ctx.channel.send("Sorry your queue is currently at the maximum of " + str(size) + ".")
+            except Exception as error:
+                print(error)
 
             for query in songlist:
                 try:
+                    try: # checking queue size in the faster add portion of the code.
+                        size = len(player.queue)
+                        if size > 99: # This + 1 is the queue size limit, +1 more for currently playing. so maximum here is 101 songs including current.
+                            return await ctx.channel.send("Sorry your queue is currently at the maximum of " + str(size) + ".")
+                    except Exception as error:
+                        print(error)
+
                     if ctx.author.voice is not None:
                         query = f'ytsearch:{query}'
                         results = await player.node.get_tracks(query)
