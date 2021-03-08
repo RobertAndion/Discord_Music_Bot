@@ -92,6 +92,8 @@ Please read more about how to set it up above.
 Note: This function should be used before trying clearcache to fix bot errors.
 *To not use this function remove line 4, and 40-44 in bot.py*
 
+**Updated**
+This function is now updated to the newest API version.
 ```
 .play <SONG-NAME>
 ```
@@ -217,6 +219,8 @@ from the bot. If nothing is playing the command will fail not work.
 Adds the currently playing song to the given playlist. Case sensitive.
 If the playlist does not exist or no song is playing this will fail not work.
 
+**Updated**
+This function is now located in the music.py file and has been changed to the newest API version.
 ```
 .playfromlist <Playlist name> (playl)
 ```
