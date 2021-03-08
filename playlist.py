@@ -5,19 +5,17 @@ import asyncio
 from discord import utils
 from discord import Embed
 import fileRead
+import re
+url_rx = re.compile(r'https?://(?:www\.)?.+')
 """
-Robert A. Computer Science USF, cog with playlist functions related to music.py
+Robert A. File to contain all functions relating to a playlist.
+The actual playl command has been moved to music now for more concise code.
+"""
 
-"""
+
 class playlist(commands.Cog):
-    def __init__(self,bot):
+    def __init__(self, bot):
         self.bot = bot
-        self.bot.music = lavalink.Client(self.bot.user.id)
-        self.bot.music.add_node('localhost',2333,'changeme123','na','local_music_node') # PASSWORD HERE MUST MATCH YML
-        self.bot.add_listener(self.bot.music.voice_update_handler, 'on_socket_response')
-        self.bot.music.add_event_hook(self.track_hook)
-
-
 
     @commands.command(name = "viewplaylist", aliases = ["vpl"],description="Views all songs inside of a given playlist.")
     @commands.has_any_role("DJ",'Dj','Administrator')
@@ -106,7 +104,7 @@ class playlist(commands.Cog):
     @commands.command(name = "createplaylist", aliases = ['cpl'],description="Uses the currently playing song to start a new playlist with the inputted name")
     @commands.has_any_role("DJ","Dj","Administrator")
     async def create_playlist(self,ctx,*,playlist_name):
-        player = self.bot.music.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
             songname = player.current['title']
             fileRead.new_playlist(ctx,playlist_name,songname)
@@ -119,7 +117,7 @@ class playlist(commands.Cog):
     @commands.command(name="addtoplaylist",aliases=["atp"],description="Adds currently playing song to the given playlist name as long as it exists.")
     @commands.has_any_role("DJ","Dj","Administrator")
     async def add_to_playlist(self,ctx,*,playlist_name):
-        player = self.bot.music.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
             songname = player.current['title']
             passfail = fileRead.add_to_playlist(ctx,playlist_name,songname)
@@ -130,7 +128,7 @@ class playlist(commands.Cog):
         else:
             await ctx.channel.send("Need the song to add currently playing.")
 
-
+    """ Legacy code now.
     @commands.command(name="playfromlist",aliases = ["pfpl","playl"],description="Loads a playlist into the queue to be played.")
     @commands.has_any_role("Dj","DJ","Administrator")
     async def play_from_list(self,ctx,*,playlist_name):
@@ -191,7 +189,7 @@ class playlist(commands.Cog):
     async def connect_to(self, guild_id: int, channel_id: str):
         ws = self.bot._connection._get_websocket(guild_id)
         await ws.voice_state(str(guild_id), channel_id)
-
+    """
     @commands.command(name="renameplaylist",aliases = ["rpl"],description="Renames a current list. Input as: current name,new name")
     @commands.has_any_role("Dj","DJ","Administrator")
     async def rename_playlist(self,ctx,*,raw_name):
@@ -206,7 +204,7 @@ class playlist(commands.Cog):
     @commands.command(name="addqueuetolist",aliases = ["aqtp"],description="Adds the entire queue to a playlist.")
     @commands.has_any_role("Dj","DJ","Administrator")
     async def add_queue_to_list(self,ctx,*,listname):
-        player = self.bot.music.player_manager.get(ctx.guild.id)
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
             songlist = player.queue
             for song in songlist:
@@ -216,6 +214,12 @@ class playlist(commands.Cog):
             await ctx.channel.send("Queue added to " + str(listname) + ".")
         else :
             await ctx.channel.send("There is nothing playing.")
+
+def setup(bot):
+    bot.add_cog(playlist(bot))
+
+
+
 
 def setup(bot):
     bot.add_cog(playlist(bot))
