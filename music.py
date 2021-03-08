@@ -39,6 +39,13 @@ class music(commands.Cog):
                 return await ctx.channel.send("Please connect to the same chat as the bot.") 
 
             try:
+                size = len(player.queue)
+                if size > 99: # This + 1 is the queue size limit, +1 more for currently playing. so maximum here is 101 songs including current.
+                    return await ctx.channel.send("Sorry your queue is currently at the maximum of " + str(size) + ".")
+            except Exception as error:
+                print(error)
+
+            try:
                 query = query.strip('<>')
                 if not url_rx.match(query): # This and the line above and below allow for direct link play
                     query = f'ytsearch:{query}'
@@ -223,13 +230,15 @@ class music(commands.Cog):
                     for song in songlistOG:
                         songlist.append(song)
                     songlist.append(player.current)
-                    size = len(songlist)
                     random.shuffle(songlist)
+
+                    await player.set_pause(True) # pause to avoid choppy skipping audio
+
                     for song in songlist:
                         player.add(requester=ctx.author.id, track=song) 
-
-                    for x in range(0,size):
-                        await player.skip()
+                        await player.skip() # Real time skipping to keep the queue small.
+                    if player.paused and player.is_playing:
+                        await player.set_pause(False)
                     await ctx.channel.send("Finished.")
                 else:
                     await ctx.channel.send("Nothing playing!")
