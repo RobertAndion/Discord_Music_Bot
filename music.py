@@ -306,7 +306,7 @@ class music(commands.Cog):
             await ctx.channel.send(embed=embed)
         else:
             await ctx.channel.send("Nothing is queued.")
-
+    # This needs to be tested more thoroughly. Broke my bot again.
     @commands.command(name = "shuffle",description = "New shuffle function that has to be called once and makes a new queue. Result is shown on \"queue\" commands now..")
     @commands.has_any_role("Dj","DJ","Administrator")
     async def shuffle(self,ctx):
@@ -314,20 +314,8 @@ class music(commands.Cog):
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
                 if player.is_playing:
-                    songlistOG = player.queue
-                    songlist = []
-                    for song in songlistOG:
-                        songlist.append(song)
-                    songlist.append(player.current)
+                    songlist = player.queue
                     random.shuffle(songlist)
-
-                    await player.set_pause(True) # pause to avoid choppy skipping audio
-
-                    for song in songlist:
-                        player.add(requester=ctx.author.id, track=song) 
-                        await player.skip() # Real time skipping to keep the queue small.
-                    if player.paused and player.is_playing:
-                        await player.set_pause(False)
                     await ctx.channel.send("Finished.")
                 else:
                     await ctx.channel.send("Nothing playing!")
@@ -336,13 +324,12 @@ class music(commands.Cog):
         except Exception as error:
             print(error)
 
-    """ Hopefully no longer neede with the new updated API
     @commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
     @commands.has_permissions(ban_members=True, kick_members=True, manage_roles=True, administrator=True)
     async def disconnect_player(self, ctx):
-        player = self.bot.lavalink.player_manager.get(ctx.guild.id) # needs the be the create version.
+        player = self.bot.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
         await self.bot.lavalink.player_manager.destroy(int(ctx.guild.id))
         await ctx.channel.send("Bot player has been cleared successfully.")
-        """
+        
 def setup(bot):
     bot.add_cog(music(bot))
