@@ -4,6 +4,9 @@
 This is a personal project of mine to create an easy to use and reliable discord music bot.
 I hope you can find use in it as well!
 
+### To Join our discord: 
+https://discord.gg/YMaEKabS4m
+
 You must place all of the files in the same directory in order for this to work.
 .setup will send you a message on how to configure the bot as long as you are the server admin.
 
