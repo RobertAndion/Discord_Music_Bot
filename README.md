@@ -49,8 +49,9 @@ This is a helpful new feature thats saves the time of having to log into the bot
 Many issues are quickly solved with a reboot.
 
 Lava link is not my creation and can be found at:
-lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 https://github.com/Frederikam/Lavalink/releases
+The lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
+
 
 ### Running the bot (Without the reboot command compatibility):
 run the lavalink server using the command: 
