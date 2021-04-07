@@ -7,14 +7,6 @@ I hope you can find use in it as well!
 ### To Join our discord: 
 https://discord.gg/YMaEKabS4m
 
-You must place all of the files in the same directory in order for this to work.
-.setup will send you a message on how to configure the bot as long as you are the server admin.
-
-If you want to change the lavalink password you must change it in the application.yml
-and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
-
-Important: You must also place your discord bot token in the .env file where prompted.
-
 ### Dependancies:
 You must have java 11 (or java 13) for lavalink.
 The bot is written in and requires Python3
@@ -22,6 +14,15 @@ You must install python-dotenv, discord.py and lavalink.py links are listed belo
 https://pypi.org/project/python-dotenv/
 https://pypi.org/project/discord.py/
 https://github.com/Devoxin/Lavalink.py
+
+## General Setup
+You must place all of the files in the same directory in order for this to work.
+.setup will send you a message on how to configure the bot as long as you are the server admin.
+
+If you want to change the lavalink password you must change it in the application.yml
+and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
+
+Important: You must also place your discord bot token in the .env file where prompted.
 
 ### Optional
 In order to use the new Reboot command you need to run the bot using tmux.
