@@ -130,7 +130,7 @@ Removed completely now, will be removed on next readme update/release.
 This command will disconnect the bot, however it is bad practice in most cases.
 It will not stop the playing of songs or clear the queue. clear is the preferred command.
 This will be removed on the next release of the bot.
-**Not reccomended**
+**Not recomended**
 
 ```
 .pause (ps)

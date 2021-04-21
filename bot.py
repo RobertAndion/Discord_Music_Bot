@@ -31,6 +31,7 @@ async def on_ready():
     client.load_extension('music')
     client.load_extension('playlist')
     client.load_extension('welcome')
+    client.load_extension('cpu')
 
 @client.command(name="setup")
 @commands.has_permissions(administrator=True)
