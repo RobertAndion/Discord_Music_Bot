@@ -165,10 +165,10 @@ def rename_playlist(ctx,raw_input) -> bool:
             try:
                 with open(userpath,"r") as fileRead:
                     data = json.load(fileRead)
-                    specific = data[splitNames[0]]
+                    specific = data[splitNames[0].strip()]
                 with open(userpath,"w") as fileRead:
-                    data.pop(splitNames[0]) #pop off old playlist 
-                    data[splitNames[1]] = specific #store the same data as a new list.
+                    data.pop(splitNames[0].strip()) #pop off old playlist 
+                    data[splitNames[1].strip()] = specific #store the same data as a new list.
                     dataFinal = json.dumps(data, indent = 1)
                     help_newplaylist(ctx,dataFinal)
                     return "Success"
