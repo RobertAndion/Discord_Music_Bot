@@ -139,6 +139,7 @@ class music(commands.Cog):
 
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         # This is to play a song up front so you dont have to wait for whole queue to hear music
+        #Need to use this in a try catch to make the player disconnect or something.
         query = songlist[0]
         songlist.pop(0)
         query = f'ytsearch:{query}'
@@ -293,6 +294,7 @@ class music(commands.Cog):
 
             selection = page - 1
             embed = discord.Embed()
+            embed.title = 'Queue'
             # add an inital if to check if it is an int then do page -1 if its not int default to page 0
             if int(selection) < 0: # handle negative number
                 list_collection[0] += "Page: 1/" + str(len(list_collection))

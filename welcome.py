@@ -1,6 +1,6 @@
+import discord
 from discord.ext import commands
 from discord.utils import get
-import discord
 ###
 # This cog is used as a welcome messaging system for the channel. Can be customized a great deal.
 ###
