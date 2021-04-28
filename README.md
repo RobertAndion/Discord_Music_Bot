@@ -8,37 +8,74 @@ I hope you can find use in it as well!
 https://discord.gg/YMaEKabS4m
 
 ### Dependancies:
-You must have java 11 (or java 13) for lavalink.
+You **must** have java 11 (or java 13) for lavalink.
 The bot is written in and requires Python3
-You must install python-dotenv, discord.py and lavalink.py links are listed below.
+You must install python-dotenv, discord.py, lavalink.py and psutil, links are listed below.
 https://pypi.org/project/python-dotenv/
 https://pypi.org/project/discord.py/
 https://github.com/Devoxin/Lavalink.py
+https://pypi.org/project/psutil/
 
-## General Setup
+(psutil does not need to be installed if cpu functions are not needed, see more below.)
+
+Lava link is not my creation and can be found at:
+https://github.com/Frederikam/Lavalink/releases
+(It can also be found in other Git branches. Any should be fine)
+The lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
+
+
+## Full installation instructions:
+
+### General Setup
 You must place all of the files in the same directory in order for this to work.
 .setup will send you a message on how to configure the bot as long as you are the server admin.
 
 If you want to change the lavalink password you must change it in the application.yml
 and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
 
-Important: You must also place your discord bot token in the .env file where prompted.
+**Important:** You must also place your discord bot token in the .env file where prompted.
 
-### Optional
+### How to install packages
+
+First ensure that you have python3 installed on your system, to do so enter python3 into a terminal
+and you should be greeted by the python command line interface, to exit type quit()
+Now that you have made sure you have python3 install pip.
+
+##### Ubuntu:
+```
+sudo apt-get install python3-pip
+```
+
+##### Arch:
+```
+sudo pacman -S python-pip
+```
+
+Now that you have pip installed you can reference the links above on how to install each package with pip commands.
+For example to install lavalink it is as simple as:
+```
+pip3 install lavalink
+```
+(Some will only need pip while other OS will need pip3 to be specified.)
+
+The sections below will cover starting the bot with the Reboot command enabled or running it without.
+I personally use Reboot often as many of the issues you may run across only need a quick reboot to get working again.
+
+### Reboot command configuration
 In order to use the new Reboot command you need to run the bot using tmux.
 Installing tmux is simple
 
-#### Debian:
+##### Ubuntu:
 ```
 sudo apt-get install tmux
 ```
 
-#### Arch:
+##### Arch:
 ```
 sudo pacman -S tmux
 ```
 
-### Startup:
+### Running the bot with reboot capabilities:
 
 In order to start the bot run
 ```
@@ -48,12 +85,8 @@ This will set up tmux with the proper session names in order to use the scripts 
 This is a helpful new feature thats saves the time of having to log into the bot and reboot it manually.
 Many issues are quickly solved with a reboot.
 
-Lava link is not my creation and can be found at:
-https://github.com/Frederikam/Lavalink/releases
-The lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 
-
-### Running the bot (Without the reboot command compatibility):
+### Running the bot without reboot command capabilities:
 run the lavalink server using the command: 
 ```
 java -jar lavalink.jar
@@ -64,15 +97,17 @@ python3 bot.py
 ```
 Both terminals must remain running for the bot to be live, consider using tmux.
 
+### Note:
+
 Before many commands will work, an initial "play" command will need to be made. Once this is done once
 it will not need to be redone for the entirety of the bots run time. This is not something to be fixed.
-The player object doesnt exist until at least one play related command has been issued in a session.
+The player object doesn't exist until at least one play related command has been issued in a session.
 Most commands have error handling for this now, run a play or playl command before trying to pause or 
 unpause etc. (makes logical sense anyways.)
 
 
-## SETUP:
-In order for music commands you must make a "Dj", "Administrator" or "DJ" role
+## Preparing to use the bot:
+In order for music commands you must make a "Dj", "Administrator" or "DJ" role in discord
 and assign it to those you want to be able to play songs. 
 (Future releases will have variable role names you can set in the code)
 
@@ -97,8 +132,6 @@ Please read more about how to set it up above.
 Note: This function should be used before trying clearcache to fix bot errors.
 *To not use this function remove line 4, and 40-44 in bot.py*
 
-**Updated**
-This function is now updated to the newest API version.
 ```
 .play <SONG-NAME>
 ```
@@ -129,7 +162,7 @@ Removed completely now, will be removed on next readme update/release.
 ```
 This command will disconnect the bot, however it is bad practice in most cases.
 It will not stop the playing of songs or clear the queue. clear is the preferred command.
-This will be removed on the next release of the bot.
+This has now been removed. It is still present in the code but commented out.
 **Not recomended**
 
 ```
@@ -155,7 +188,6 @@ at the bottom, like so, Page: 5/6 means you are on page 5 out of a total of 6 pa
 No argument assumes page one, negative or 0 goes to page 1 and a page larger than the total
 goes to the last page. 
 
-**Updated**
 ```
 .shuffle
 ```
@@ -163,16 +195,11 @@ This no longer uses the given shuffle function from lavalink.
 It is a custom function that shuffles in a finalized form,
 viewable in the queue command.
 
-**Removed**
-```
-.stopshuffle (unshuffle)
-```
-This will stop the shuffle command and return the function to the default state of unshuffled.
-This will be removed from the readme on the next release/update.
 
 ```
 .clearbotcache
 ```
+**Currently removed** So far I have not needed this with the new API so it has been removed.(Dangerous anyways)
 **Warning** This is to be used as a last resort ONLY. Better to reboot the bot.
 This will clear the player cache from your server. Do not do this for minor issues, try restarting the bot (and/or Lavalink) first,
 or kicking it and reinviting it. This command can currupt data, the bot **MUST** be disconnected before using this.
@@ -224,8 +251,6 @@ from the bot. If nothing is playing the command will fail not work.
 Adds the currently playing song to the given playlist. Case sensitive.
 If the playlist does not exist or no song is playing this will fail not work.
 
-**Updated**
-This function is now located in the music.py file and has been changed to the newest API version.
 ```
 .playfromlist <Playlist name> (playl)
 ```
@@ -238,7 +263,6 @@ it will print a message when it is completely done.
 This function will rename an existing playlist. The names must be seperated by a comma
 and no spaces before or after the comma. 
 
-**NEW**
 ```
 .addqueuetolist <Playlist name> (aqtp)
 ```
@@ -317,6 +341,26 @@ The welcome functions can be removed by deleting line 30 in bot.py and deleting 
 You must also delete line 8 and 9 from bot.py to remove discord intents if you do not want to use welcome functions.
 
 ### All the functions in fileRead are used by commands and require no command to use (Helper functions). 
+
+## CPU Commands:
+### NOTE: cpu.py is a new option and will require extra work to get working.
+##### If this functionality is undesired you can remove line 34 from bot.py and delete cpu.py
+
+```
+.cpu_info <> (cpu)
+```
+This will show current cpu information such as % usage, load and temperature.
+The temperature will take some adjustment to get working. First change line 29 in cpu.py to:
+```
+embed.description += str(psutil.sensors_temperatures(fahrenheit=False)) + " C \n"
+```
+This will print a full JSON package of the available sensors then select the proper one as I did for one server in the actual code.
+
+```
+.server_info <> (serverinfo)
+```
+This provides more permanant information such as thread count, RAM, and currently available RAM.
+(Should be cross system compatible.)
 
 
 Robert A -USF Computer Science
