@@ -204,23 +204,23 @@ class music(commands.Cog):
         except:
             await ctx.channel.send("Nothing playing.")
 
-    # may remove this as it is depricated by clear, a safer alternative.
-    @commands.command(name = 'disconnect', aliases = ['dc'],description="Force disconnects the bot from a voice channel") #bad practice, better to use clear.
-    @commands.has_any_role('Dj','Administrator','DJ')
-    async def disconnect_bot(self,ctx):
-        try:
-            player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
-                if not player.is_connected:
-                    await ctx.channel.send("No bot is connected.")
-                else:
-                    await ctx.channel.send("Bot disconnected.")
-                    guild_id = int(player.guild_id)
-                    await self.connect_to(guild_id,None)
-            else: 
-                await ctx.channel.send("Please join the same voice channel as me.")
-        except:
-            await ctx.channel.send("Nothing playing.")
+    # Began the removal of this function as clear is a better alternative.
+    #@commands.command(name = 'disconnect', aliases = ['dc'],description="Force disconnects the bot from a voice channel") #bad practice, better to use clear.
+    #@commands.has_any_role('Dj','Administrator','DJ')
+    #async def disconnect_bot(self,ctx):
+    #    try:
+    #        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+    #        if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
+    #            if not player.is_connected:
+    #                await ctx.channel.send("No bot is connected.")
+    #            else:
+    #                await ctx.channel.send("Bot disconnected.")
+    #                guild_id = int(player.guild_id)
+    #                await self.connect_to(guild_id,None)
+    #        else: 
+    #            await ctx.channel.send("Please join the same voice channel as me.")
+    #    except:
+    #        await ctx.channel.send("Nothing playing.")
 
 
     @commands.command(name='pause',aliases=["ps"],description="Pauses a song if one is playing.") #command to pause currently playing music
@@ -325,13 +325,13 @@ class music(commands.Cog):
                 await ctx.channel.send("Please join the same voice channel as me and ensure something is playing.")
         except Exception as error:
             print(error)
-
-    @commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
-    @commands.has_permissions(ban_members=True, kick_members=True, manage_roles=True, administrator=True)
-    async def disconnect_player(self, ctx):
-        player = self.bot.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
-        await self.bot.lavalink.player_manager.destroy(int(ctx.guild.id))
-        await ctx.channel.send("Bot player has been cleared successfully.")
+    # This function has not been updated to the latest API and is not currently recommended. May add back in a future update.
+    #@commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
+    #@commands.has_permissions(ban_members=True, kick_members=True, manage_roles=True, administrator=True)
+    #async def disconnect_player(self, ctx):
+    #    player = self.bot.lavalink.player_manager.create(ctx.guild.id, endpoint=str(ctx.guild.region))
+    #    await self.bot.lavalink.player_manager.destroy(int(ctx.guild.id))
+    #    await ctx.channel.send("Bot player has been cleared successfully.")
         
 def setup(bot):
     bot.add_cog(music(bot))
