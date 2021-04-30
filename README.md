@@ -11,10 +11,10 @@ https://discord.gg/YMaEKabS4m
 You **must** have java 11 (or java 13) for lavalink.
 The bot is written in and requires Python3
 You must install python-dotenv, discord.py, lavalink.py and psutil, links are listed below.
-https://pypi.org/project/python-dotenv/
-https://pypi.org/project/discord.py/
-https://github.com/Devoxin/Lavalink.py
-https://pypi.org/project/psutil/
+* https://pypi.org/project/python-dotenv/
+* https://pypi.org/project/discord.py/
+* https://github.com/Devoxin/Lavalink.py
+* https://pypi.org/project/psutil/
 
 (psutil does not need to be installed if cpu functions are not needed, see more below.)
 
@@ -344,7 +344,7 @@ You must also delete line 8 and 9 from bot.py to remove discord intents if you d
 
 ## CPU Commands:
 ### NOTE: cpu.py is a new option and will require extra work to get working.
-##### If this functionality is undesired you can remove line 34 from bot.py and delete cpu.py
+##### If this functionality is undesired you can remove line 34 from bot.py and delete cpu.py. You will also not need the psutil package
 
 ```
 .cpu_info <> (cpu)
