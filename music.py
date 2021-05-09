@@ -78,6 +78,7 @@ class music(commands.Cog):
             guild_id = int(event.player.guild_id)
             guild = self.bot.get_guild(guild_id)
             await guild.change_voice_state(channel=None)
+        # print(event) print statement for debugging
 
     @commands.command(name = 'play', description=".play {song name} to play a song, will connect the bot.") #Allows for a song to be played, does not make sure people are in the same chat.
     @commands.has_any_role('Dj','Administrator','DJ')
@@ -86,7 +87,7 @@ class music(commands.Cog):
         # Get the player for this guild from cache.
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         query = query.strip('<>')
-        # Check if the user input might be a URL. If it isn't, we can Lavalink do a YouTube search for it instead.
+        # Check if the user input might be a URL.
         if not url_rx.match(query):
             query = f'ytsearch:{query}'
 
@@ -106,7 +107,7 @@ class music(commands.Cog):
         #   SEARCH_RESULT   - query prefixed with either ytsearch: or scsearch:.
         #   NO_MATCHES      - query yielded no results
         #   LOAD_FAILED     - most likely, the video encountered an exception during loading.
-        if results['loadType'] == 'PLAYLIST_LOADED':
+        if results['loadType'] == 'PLAYLIST_LOADED': # This handles playlist links
             tracks = results['tracks']
 
             for track in tracks:
@@ -161,7 +162,7 @@ class music(commands.Cog):
             except Exception as error: # Catches song not found
                 print(error)
 
-        await ctx.send("Playlist loaded successfully.")
+        await ctx.send(str(playlist_name) + " loaded successfully.")
 
         if not player.is_playing:
             await player.play()
@@ -171,19 +172,20 @@ class music(commands.Cog):
     async def skip_song(self, ctx,amount = 1):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-
-            x = 0
-            while (x < amount):
-                x = x + 1
-                if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
+            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
+                x = 0
+                while (x < amount):
+                    x = x + 1
                     if not player.is_playing:
                         return await ctx.channel.send("Nothing playing to skip.")
                     else:
+                        if x % 2 == 0:
+                            await asyncio.sleep(.1)
                         await player.skip()
                         if x == 1: # make sure song skipped only prints once.
                             await ctx.channel.send("Song skipped.")
-                else:
-                    return await ctx.channel.send("Please join the same voice channel as me.")
+            else:
+                return await ctx.channel.send("Please join the same voice channel as me.")
         except:
             return await ctx.channel.send("Nothing playing.")
 
@@ -194,34 +196,16 @@ class music(commands.Cog):
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
                 if player.is_playing:
-                    while player.is_playing:
-                        await player.skip()
-                    await ctx.channel.send("Songs Cleared.")
+                    player.queue.clear()
+                    await player.stop()
+                    await ctx.guild.change_voice_state(channel=None)
+                    await ctx.send("Songs Cleared.")
                 else:
-                    await ctx.channel.send("Nothing playing to clear.")
+                    await ctx.send("Nothing playing to clear.")
             else: 
                 await ctx.channel.send("Please join the same voice channel as me.")
         except:
             await ctx.channel.send("Nothing playing.")
-
-    # Began the removal of this function as clear is a better alternative.
-    #@commands.command(name = 'disconnect', aliases = ['dc'],description="Force disconnects the bot from a voice channel") #bad practice, better to use clear.
-    #@commands.has_any_role('Dj','Administrator','DJ')
-    #async def disconnect_bot(self,ctx):
-    #    try:
-    #        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-    #        if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
-    #            if not player.is_connected:
-    #                await ctx.channel.send("No bot is connected.")
-    #            else:
-    #                await ctx.channel.send("Bot disconnected.")
-    #                guild_id = int(player.guild_id)
-    #                await self.connect_to(guild_id,None)
-    #        else: 
-    #            await ctx.channel.send("Please join the same voice channel as me.")
-    #    except:
-    #        await ctx.channel.send("Nothing playing.")
-
 
     @commands.command(name='pause',aliases=["ps"],description="Pauses a song if one is playing.") #command to pause currently playing music
     @commands.has_any_role('Dj','Administrator','DJ')
@@ -235,7 +219,7 @@ class music(commands.Cog):
                     await player.set_pause(True)
                     i = 0
                     while i < 84: # This will periodically check to see if it has been unpaused
-                        await asyncio.sleep(5) 
+                        await asyncio.sleep(5) # (84 * 5 = 7 minutes)
                         i = i + 1
                         if not player.paused: # If its been unpaused no need to keep counting. (Also fixes some issues)
                             status = False
@@ -308,7 +292,7 @@ class music(commands.Cog):
             await ctx.channel.send(embed=embed)
         else:
             await ctx.channel.send("Nothing is queued.")
-    # This needs to be tested more thoroughly. Broke my bot again.
+    # This needs to be tested more thoroughly. Believe to have solved it but unsure.
     @commands.command(name = "shuffle",description = "New shuffle function that has to be called once and makes a new queue. Result is shown on \"queue\" commands now..")
     @commands.has_any_role("Dj","DJ","Administrator")
     async def shuffle(self,ctx):
@@ -317,7 +301,15 @@ class music(commands.Cog):
             if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
                 if player.is_playing:
                     songlist = player.queue
-                    random.shuffle(songlist)
+                    #random.shuffle(songlist) # This breaks my bot at times.. Custom shuffle to slow this down.
+                    size = len(songlist)
+                    for x in range(0,size):
+                        if(x % 8 == 0): # adjust the 8 bigger for faster shuffle, smaller for slower but safer as it will slow down the shuffle.
+                            await asyncio.sleep(0.1)
+                        temp = songlist[x]
+                        randnum = random.randint(0,size - 1)
+                        songlist[x] = songlist[randnum]
+                        songlist[randnum] = temp
                     await ctx.channel.send("Finished.")
                 else:
                     await ctx.channel.send("Nothing playing!")
@@ -325,7 +317,9 @@ class music(commands.Cog):
                 await ctx.channel.send("Please join the same voice channel as me and ensure something is playing.")
         except Exception as error:
             print(error)
-    # This function has not been updated to the latest API and is not currently recommended. May add back in a future update.
+
+
+    #This function has not been updated to the latest API and is not currently recommended. May add back in a future update.
     #@commands.command(name = 'clearbotcache', description="Used to clear the bot cache, only use after reading the Readme file. This can have negative consequences and should be avoided.") 
     #@commands.has_permissions(ban_members=True, kick_members=True, manage_roles=True, administrator=True)
     #async def disconnect_player(self, ctx):

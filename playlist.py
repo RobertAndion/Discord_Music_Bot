@@ -217,9 +217,3 @@ class playlist(commands.Cog):
 
 def setup(bot):
     bot.add_cog(playlist(bot))
-
-
-
-
-def setup(bot):
-    bot.add_cog(playlist(bot))
