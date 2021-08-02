@@ -43,6 +43,7 @@ then place the dockerfile on the same level as the Bot folder (not inside) then 
 command. First set the correct .env and Playlist folder (if you have existing playlists) and they
 will automatically be brought into the container. You can also set up crontab to run the sh files 
 on startup for automatic bot restore on a reboot.
+(Automatic restore is being tested and will be documented upon completion)
 
 ### How to install packages
 
