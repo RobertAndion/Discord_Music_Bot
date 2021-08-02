@@ -36,6 +36,14 @@ and in both music.py and playlist.py on the commented lines where 'changeme123' 
 
 **Important:** You must also place your discord bot token in the .env file where prompted.
 
+### Docker
+If you wish to run the bot in a docker container the Docker folder provides a
+dockerfile to do so. In order to use the file place the github files in a folder named Bot,
+then place the dockerfile on the same level as the Bot folder (not inside) then run a normal build 
+command. First set the correct .env and Playlist folder (if you have existing playlists) and they
+will automatically be brought into the container. You can also set up crontab to run the sh files 
+on startup for automatic bot restore on a reboot.
+
 ### How to install packages
 
 First ensure that you have python3 installed on your system, to do so enter python3 into a terminal
