@@ -41,9 +41,20 @@ If you wish to run the bot in a docker container the Docker folder provides a
 dockerfile to do so. In order to use the file place the github files in a folder named Bot,
 then place the dockerfile on the same level as the Bot folder (not inside) then run a normal build 
 command. First set the correct .env and Playlist folder (if you have existing playlists) and they
-will automatically be brought into the container. You can also set up crontab to run the sh files 
-on startup for automatic bot restore on a reboot.
-(Automatic restore is being tested and will be documented upon completion)
+will automatically be brought into the container. 
+
+#### Automatic Docker Startup
+In order to auto start, create the docker container and name it "musicbot",
+then place the musicbotstart.sh on the containers host machine. In the host machine run the command
+```
+crontab -e
+```
+Then choose nano if you are unfamiliar with linux editors, or pick your favorite editor. Add the following line to the bottom of
+the file it opens
+```
+@reboot sh /pathtoyourfile/musicbotstart.sh
+```
+Now upon the main server restarting it will start up the docker container and run the bot inside.
 
 ### How to install packages
 
