@@ -154,6 +154,13 @@ Note: This function should be used before trying clearcache to fix bot errors.
 *To not use this function remove line 4, and 40-44 in bot.py*
 
 ```
+.backupPlaylists
+```
+This command will only work for the bot owner and will private message them a zip file of all playlists.
+This is especially useful for Docker containers where the only thing you would need out before making a new 
+version are the playlists.
+
+```
 .play <SONG-NAME>
 ```
 If the person using the command is in a voice channel and the bot has access to that channel it will connect and play the song listed.
