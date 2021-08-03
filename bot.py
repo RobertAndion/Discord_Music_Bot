@@ -1,7 +1,7 @@
 import os
 import discord
-import random # Not sure if this is in use...
-import subprocess #New for the restart command
+import asyncio
+import subprocess, shlex
 from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -27,11 +27,10 @@ client = commands.Bot(command_prefix='.',intents=intents)
 @client.event
 async def on_ready():
     print("Bot is live")
-    client.load_extension('Admin')
-    client.load_extension('music')
     client.load_extension('playlist')
-    client.load_extension('welcome')
-    client.load_extension('cpu')
+    for file in os.listdir("./Cogs"):
+        if file.endswith(".py"):
+            client.load_extension(f'Cogs.{file[:-3]}')
 
 @client.command(name="setup")
 @commands.has_permissions(administrator=True)
@@ -44,5 +43,22 @@ async def reboot(ctx):
     await ctx.channel.send("Rebooting")
     subprocess.call(["sh","./autorestart.sh"])
 
+@client.command(name="backupPlaylists")
+@commands.is_owner() # Now only the bot owner can call backupPlaylists.
+async def backup_playlists(ctx):
+    await ctx.channel.send("Backing up playlists and will send as a personal message.")
+    if os.path.isfile('./backup.zip'):
+        os.remove('./backup.zip')
+
+    zipCommand = shlex.split("zip -r backup.zip ./Playlist")
+    outcome = subprocess.Popen(zipCommand)
+    waitCounter = 10
+    while outcome.poll() is None and waitCounter > 0:
+        await asyncio.sleep(1)
+        waitCounter = waitCounter - 1
+
+    if os.path.isfile('./backup.zip'):
+        await ctx.author.send(file=discord.File(r'./backup.zip'))
+        os.remove('./backup.zip')
 
 client.run(TOKEN)
