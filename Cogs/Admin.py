@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from discord.utils import get
-# Robert A. USF Computer Science: A basic cog to hold administrative commands.
+
 class Admin(commands.Cog):
     def __init__(self,bot):
         self.bot = bot

@@ -6,10 +6,6 @@ from discord.ext import commands
 import asyncio
 import fileRead
 url_rx = re.compile(r'https?://(?:www\.)?.+')
-"""
-Robert A. USF Computer Science
-A cog to hold all of the functions used to play music for the bot.
-"""
 
 class music(commands.Cog):
     def __init__(self, bot):
