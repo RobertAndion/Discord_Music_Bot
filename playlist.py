@@ -7,11 +7,6 @@ from discord import Embed
 import fileRead
 import re
 url_rx = re.compile(r'https?://(?:www\.)?.+')
-"""
-Robert A. File to contain all functions relating to a playlist.
-The actual playl command has been moved to music now for more concise code.
-"""
-
 
 class playlist(commands.Cog):
     def __init__(self, bot):
