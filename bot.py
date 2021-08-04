@@ -8,9 +8,6 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 from discord.ext import commands
 intents = discord.Intents.default()
 intents.members = True
-## Robert A. USF Computer Science: 
-## Python discord bot with limited administration commands and an array of
-## music playing commands, along with a new welcome/auto role function.
 
 Serverinformation = """
 Discord Music Bot Version 1.3:

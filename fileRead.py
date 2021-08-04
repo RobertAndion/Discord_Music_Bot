@@ -5,9 +5,6 @@ from discord.utils import get
 from discord import Embed
 import os.path
 from os import path
-##
-# This is a helper function to playlist.py to manage the JSON file I/O
-##
 
 def logUpdate(ctx, songName): #automatically logs all songs played by a user in a textfile named their name.
     user_file = os.path.join("SongLog",str(ctx.author.id)) 

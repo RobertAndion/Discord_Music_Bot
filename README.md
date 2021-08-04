@@ -43,9 +43,35 @@ then place the dockerfile on the same level as the Bot folder (not inside) then 
 command. First set the correct .env and Playlist folder (if you have existing playlists) and they
 will automatically be brought into the container. 
 
+Docker start command:
+```
+docker run -it -m 2G --cpuset-cpus 0-1 --security-opt=no-new-privileges <image_id_here>
+```
+In this command the -m and --cpuset-cpus are optional but means that the container can use at most
+two gigabytes of RAM and cpuset 0-1 means that the container can use threads 0 and 1. (Limiting resources)
+All of this can be adjust to suit or removed entirely. Keep --security-opt=no-new-privileges for security.
+
+After this you can exit the container and rename it using
+```
+docker container ls -a
+```
+and then use the container id in the following command:
+```
+docker rename <container_id_here> musicbot
+```
+Now the automatic start file will boot up the container and automatically run the bot inside,
+if the instructions below are followed.
+
+#### Note:
+You will be unable to update these containers from the inside so the command .backupPlaylists is here
+in order to send you the playlists (only new info in the container) so you can remake the container images
+often to get updates and changes to the bots code, simply place the .json lists back in the playlist folder
+before building the new image and they will be added to the new image.
+
 #### Automatic Docker Startup
 In order to auto start, create the docker container and name it "musicbot",
-then place the musicbotstart.sh on the containers host machine. In the host machine run the command
+then place the musicbotstart.sh on the containers host machine. In the host machine run the command:
+(use sudo -i first if you need sudo to run docker, you should.)
 ```
 crontab -e
 ```

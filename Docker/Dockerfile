@@ -11,7 +11,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install discord.py lavalink python-dotenv psutil && \
     apt-get remove python3-pip -y
 
-ADD ./Bot /MusicBot
+COPY ./Bot /MusicBot
 
 RUN groupadd -g 1000 basicuser && useradd -r -u 1000 -g basicuser basicuser
 
