@@ -49,7 +49,7 @@ docker run -it -m 2G --cpuset-cpus 0-1 --security-opt=no-new-privileges <image_i
 ```
 In this command the -m and --cpuset-cpus are optional but means that the container can use at most
 two gigabytes of RAM and cpuset 0-1 means that the container can use threads 0 and 1. (Limiting resources)
-All of this can be adjust to suit or removed entirely. Keep --security-opt=no-new-privileges for security.
+All of this can be adjusted to suit or removed entirely. Keep --security-opt=no-new-privileges for security.
 
 After this you can exit the container and rename it using
 ```
