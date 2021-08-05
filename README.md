@@ -8,7 +8,10 @@ Check out our other project written in Node.js: https://github.com/RobertAndion/
 ### To Join our discord: 
 https://discord.gg/YMaEKabS4m
 
+## General Setup
+
 ### Dependancies:
+
 You **must** have java 11 (or java 13) for lavalink.
 The bot is written in and requires Python3
 You must install python-dotenv, discord.py, lavalink.py and psutil, links are listed below.
@@ -22,14 +25,11 @@ You must install python-dotenv, discord.py, lavalink.py and psutil, links are li
 Lava link is not my creation and can be found at:
 https://github.com/Frederikam/Lavalink/releases
 (It can also be found in other Git branches. Any should be fine)
-The lavalink.jar **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
+The lavalink.jar, 
+**MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 
-
-## Full installation instructions:
-
-### General Setup
-You must place all of the files in the same directory in order for this to work.
-.setup will send you a message on how to configure the bot as long as you are the server admin.
+Keep the same file structure as the github repo for this to work, place Lavalink.jar at the "root" of the project.
+Also, .setup will send a message on how to configure the bot as long as you are the server admin.
 
 If you want to change the lavalink password you must change it in the application.yml
 and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
@@ -82,6 +82,7 @@ the file it opens
 ```
 Now upon the main server restarting it will start up the docker container and run the bot inside.
 
+## Full installation instructions:
 ### How to install packages
 
 First ensure that you have python3 installed on your system, to do so enter python3 into a terminal
