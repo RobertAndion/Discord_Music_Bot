@@ -5,9 +5,6 @@ This is a personal project of mine to create an easy to use and reliable discord
 I hope you can find use in it as well!
 Check out our other project written in Node.js: https://github.com/RobertAndion/DiscordMusicBotNode
 
-### To Join our discord: 
-https://discord.gg/YMaEKabS4m
-
 ## General Setup
 
 ### Dependancies:
