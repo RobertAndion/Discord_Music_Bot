@@ -210,5 +210,5 @@ class playlist(commands.Cog):
         else :
             await ctx.channel.send("There is nothing playing.")
 
-def setup(bot):
-    bot.add_cog(playlist(bot))
+async def setup(bot):
+    await bot.add_cog(playlist(bot))
