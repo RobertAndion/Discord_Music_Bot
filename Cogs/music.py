@@ -20,7 +20,7 @@ class LavalinkVoiceClient(discord.VoiceClient):
             self.client.lavalink.add_node(
                 'localhost',
                 2333,
-                'youshallnotpass',
+                'changeme123',
                 'us',
                 'default-node'
             )
@@ -82,7 +82,7 @@ class music(commands.Cog):
             bot.lavalink = lavalink.Client(bot.user.id)
             # PASSWORD HERE MUST MATCH YML
             bot.lavalink.add_node(
-                '127.0.0.1', 2333, 'changeme123', 'na', 'local_music_node')
+                '127.0.0.1', 2333, 'changeme123', 'us', 'default-node')
 
         lavalink.add_event_hook(self.track_hook)
 
@@ -240,17 +240,19 @@ class music(commands.Cog):
             while (amount > 0):
                 amount -= 1
                 if not player.is_playing:
-                    raise commands.CommandInvokeError("Nothing playing to skip.")
+                    raise commands.CommandInvokeError(
+                        "Nothing playing to skip.")
                 else:
                     if amount % 2 == 0:
-                        await asyncio.sleep(.1) # Buffering for performance, testing needed to see if still neccessary.
+                        # Buffering for performance, testing needed to see if still neccessary.
+                        await asyncio.sleep(.1)
                     await player.skip()
                     if amount == 0:  # make sure song skipped only prints once.
                         await ctx.channel.send("Song skipped.")
         except:
             if amount > 0:
                 raise commands.CommandInvokeError("All songs skipped")
-                
+
             raise commands.CommandInvokeError("Something went wrong...")
 
     @commands.command(name="clear", description="Clears all of the currently playing songs and makes the bot disconnect.")
@@ -273,30 +275,29 @@ class music(commands.Cog):
     async def pause_bot(self, ctx):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if ctx.author.voice is not None and ctx.author.voice.channel.id == int(player.channel_id):
-                if player.is_playing:
-                    status = True
-                    await ctx.channel.send("Song has been paused.")
-                    await player.set_pause(True)
-                    i = 0
-                    while i < 84:  # This will periodically check to see if it has been unpaused
-                        await asyncio.sleep(5)  # (84 * 5 = 7 minutes)
-                        i = i + 1
-                        # If its been unpaused no need to keep counting.
-                        if not player.paused:
-                            status = False
-                            break
+            if player.is_playing:
+                status = True
+                await ctx.channel.send("Song has been paused.")
+                await player.set_pause(True)
+                i = 0
+                while i < 84:  # This will periodically check to see if it has been unpaused
+                    await asyncio.sleep(5)  # (84 * 5 = 7 minutes)
+                    i = i + 1
+                    # If its been unpaused no need to keep counting.
+                    if not player.paused:
+                        status = False
+                        break
 
-                    if player.paused and player.is_playing and status is True:
-                        await player.set_pause(False)  # If paused unpause.
-                        await ctx.channel.send("Automatically unpaused.")
+                if player.paused and player.is_playing and status is True:
+                    await player.set_pause(False)  # If paused unpause.
+                    await ctx.channel.send("Automatically unpaused.")
 
-                else:
-                    await ctx.channel.send("No song is playing to be paused.")
             else:
-                await ctx.channel.send("Please join the same voice channel as me.")
+                raise commands.CommandInvokeError(
+                    "No song is playing to be paused.")
         except:
-            await ctx.channel.send("Nothing playing.")
+            # Add a disconnect here.
+            raise commands.CommandInvokeError("Nothing playing.")
 
     @commands.command(name='unpause', aliases=['resume', 'start', 'up'], description="Unpauses a paused song.")
     @commands.has_any_role('Dj', 'Administrator', 'DJ')
@@ -382,6 +383,7 @@ class music(commands.Cog):
 
         except Exception as error:
             print(error)
+
 
 async def setup(bot):
     await bot.add_cog(music(bot))
