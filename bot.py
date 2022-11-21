@@ -7,6 +7,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 from discord.ext import commands
 intents = discord.Intents.default()
+intents.message_content = True
 intents.members = True
 
 Serverinformation = """
@@ -17,17 +18,17 @@ To use the "Admin" functions the user must have "kick" "ban" permissions for som
 ** NOTICE: Most of the bots functions rely on a role permissions basis. **
 To use the "Music" functions of the bot the role of: "Dj", "DJ", or "Administrator" needs to be made and given to the users to have this ability.
 To make roles you enter server settings and click roles. From there the plus sign creates the new role.
-
 """
+
 client = commands.Bot(command_prefix='.',intents=intents)
 
 @client.event
 async def on_ready():
     print("Bot is live")
-    client.load_extension('playlist')
+    await client.load_extension('playlist')
     for file in os.listdir("./Cogs"):
         if file.endswith(".py"):
-            client.load_extension(f'Cogs.{file[:-3]}')
+            await client.load_extension(f'Cogs.{file[:-3]}')
 
 @client.command(name="setup")
 @commands.has_permissions(administrator=True)
