@@ -48,7 +48,7 @@ class playlist(commands.Cog):
         if not isinstance(page, int):
             return ctx.channel.send("Please enter a valid number.")
 
-        list_collection = fileRead.list_playlist(ctx)
+        list_collection = fileRead.list_playlists(ctx)
         if list_collection:
             try:
                 selection = page - 1

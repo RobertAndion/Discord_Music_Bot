@@ -1,11 +1,12 @@
+from discord.ext import commands
 import os
 import discord
 import asyncio
-import subprocess, shlex
+import subprocess
+import shlex
 from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-from discord.ext import commands
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -20,7 +21,8 @@ To use the "Music" functions of the bot the role of: "Dj", "DJ", or "Administrat
 To make roles you enter server settings and click roles. From there the plus sign creates the new role.
 """
 
-client = commands.Bot(command_prefix='.',intents=intents)
+client = commands.Bot(command_prefix='.', intents=intents)
+
 
 @client.event
 async def on_ready():
@@ -30,19 +32,22 @@ async def on_ready():
         if file.endswith(".py"):
             await client.load_extension(f'Cogs.{file[:-3]}')
 
+
 @client.command(name="setup")
 @commands.has_permissions(administrator=True)
 async def setup(ctx):
     await ctx.author.send(Serverinformation)
 
+
 @client.command(name="reboot")
-@commands.is_owner() # Now only the bot owner can call reboot.
+@commands.is_owner()  # Now only the bot owner can call reboot.
 async def reboot(ctx):
     await ctx.channel.send("Rebooting")
-    subprocess.call(["sh","./autorestart.sh"])
+    subprocess.call(["sh", "./autorestart.sh"])
+
 
 @client.command(name="backupPlaylists")
-@commands.is_owner() # Now only the bot owner can call backupPlaylists.
+@commands.is_owner()  # Now only the bot owner can call backupPlaylists.
 async def backup_playlists(ctx):
     await ctx.channel.send("Backing up playlists and will send as a personal message.")
     if os.path.isfile('./backup.zip'):
