@@ -241,7 +241,7 @@ class music(commands.Cog):
                         await ctx.send("Song skipped.")
         except:
             if amount > 0:
-                raise commands.CommandInvokeError("All songs skipped")
+                return await ctx.send("All songs skipped")
 
             raise commands.CommandInvokeError("Something went wrong...")
 
@@ -286,11 +286,10 @@ class music(commands.Cog):
                     await ctx.send("Automatically unpaused.")
 
             else:
-                raise commands.CommandInvokeError(
-                    "No song is playing to be paused.")
+                await ctx.send("No song is playing to be paused.")
         except:
             # Add a disconnect here.
-            raise commands.CommandInvokeError("Nothing playing.")
+            raise commands.CommandInvokeError("Unable to retrieve player...")
 
     @commands.command(name='unpause', aliases=['resume', 'start', 'up'], description="Unpauses a paused song.")
     @commands.has_any_role('Dj', 'Administrator', 'DJ')
