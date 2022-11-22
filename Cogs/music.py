@@ -150,6 +150,7 @@ class music(commands.Cog):
     @commands.command(name='play', description=".play {song name} to play a song, will connect the bot.")
     @commands.has_any_role('Dj', 'Administrator', 'DJ')
     async def play_song(self, ctx, *, query: str):
+        fileRead.logUpdate(ctx, query)  # Add song requested to log
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         query = query.strip('<>')
 
@@ -196,26 +197,15 @@ class music(commands.Cog):
     async def play_from_list(self, ctx, *, playlist_name):
         """ Searches and plays a song from a given query. """
         # Get the player for this guild from cache.
+        fileRead.logUpdate(ctx, playlist_name)  # Add playlist name to log file
         songlist = fileRead.play_playlist(ctx, playlist_name)
         if songlist == False:
-            return await ctx.channel.send("Playlist not found.")
+            return await ctx.send("Playlist not found.")
+        await ctx.invoke(self.bot.get_command('play'), query=songlist[0])
+        songlist.pop(0)
 
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        # This is to play a song up front so you dont have to wait for whole queue to hear music
-        # Need to use this in a try catch to make the player disconnect or something.
-        query = songlist[0]
-        songlist.pop(0)
-        query = f'ytsearch:{query}'
-        results = await player.node.get_tracks(query)
-        track = results['tracks'][0]
-        track = lavalink.models.AudioTrack(
-            track, ctx.author.id, recommended=True)
-        player.add(requester=ctx.author.id, track=track)
-
-        if not player.is_playing:
-            await player.play()
-
-        for track in songlist:  # Add all remaining songs to list.
+        for track in songlist:
             try:
                 query = f'ytsearch:{track}'
                 results = await player.node.get_tracks(query)
@@ -223,7 +213,7 @@ class music(commands.Cog):
                 track = lavalink.models.AudioTrack(
                     track, ctx.author.id, recommended=True)
                 player.add(requester=ctx.author.id, track=track)
-            except Exception as error:  # Catches song not found
+            except Exception as error:
                 print(error)
 
         await ctx.send(str(playlist_name) + " loaded successfully.")
@@ -248,7 +238,7 @@ class music(commands.Cog):
                         await asyncio.sleep(.1)
                     await player.skip()
                     if amount == 0:  # make sure song skipped only prints once.
-                        await ctx.channel.send("Song skipped.")
+                        await ctx.send("Song skipped.")
         except:
             if amount > 0:
                 raise commands.CommandInvokeError("All songs skipped")
@@ -258,17 +248,20 @@ class music(commands.Cog):
     @commands.command(name="clear", description="Clears all of the currently playing songs and makes the bot disconnect.")
     @commands.has_any_role("Dj", "DJ", "Administrator")
     async def clear_queue(self, ctx):
-        try:
-            player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if player.is_playing:
-                player.queue.clear()
-                await player.stop()
-                await ctx.guild.change_voice_state(channel=None)
-                await ctx.send("Songs Cleared.")
-            else:
-                await ctx.send("Nothing playing to clear.")
-        except:
-            await ctx.channel.send("Nothing playing.")
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+
+        if not ctx.voice_client:
+            return await ctx.send('Not connected.')
+
+        if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
+            return await ctx.send('You\'re not in my voicechannel!')
+
+        player.queue.clear()
+
+        await player.stop()
+
+        await ctx.voice_client.disconnect(force=True)
+        await ctx.send('Queue was cleared.')
 
     @commands.command(name='pause', aliases=["ps"], description="Pauses a song if one is playing.")
     @commands.has_any_role('Dj', 'Administrator', 'DJ')
@@ -277,7 +270,7 @@ class music(commands.Cog):
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             if player.is_playing:
                 status = True
-                await ctx.channel.send("Song has been paused.")
+                await ctx.send("Song has been paused.")
                 await player.set_pause(True)
                 i = 0
                 while i < 84:  # This will periodically check to see if it has been unpaused
@@ -290,7 +283,7 @@ class music(commands.Cog):
 
                 if player.paused and player.is_playing and status is True:
                     await player.set_pause(False)  # If paused unpause.
-                    await ctx.channel.send("Automatically unpaused.")
+                    await ctx.send("Automatically unpaused.")
 
             else:
                 raise commands.CommandInvokeError(
@@ -304,16 +297,14 @@ class music(commands.Cog):
     async def unpause_bot(self, ctx):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if ctx.author.voice.channel.id == int(player.channel_id):
-                if player.paused:
-                    await ctx.channel.send("Resuming song.")
-                    await player.set_pause(False)
-                else:
-                    await ctx.channel.send("Nothing is paused to resume.")
+            if player.paused:
+                await ctx.send("Resuming song.")
+                await player.set_pause(False)
             else:
-                await ctx.channel.send("Please join the same voice channel as me.")
+                raise commands.CommandInvokeError(
+                    "Nothing is paused to resume.")
         except:
-            await ctx.channel.send("Nothing playing.")
+            raise commands.CommandInvokeError("Nothing playing.")
 
     @commands.command(name='queue', aliases=['playlist', 'songlist', 'upnext'], description="Shows songs up next in order, with the currently playing at the top.")
     @commands.has_any_role('Dj', 'Administrator', 'DJ')
@@ -357,9 +348,9 @@ class music(commands.Cog):
                 list_collection[selection] += "Page: " + \
                     str(page) + "/" + str(len(list_collection))
                 embed.description = list_collection[selection]
-            await ctx.channel.send(embed=embed)
+            await ctx.send(embed=embed)
         else:
-            await ctx.channel.send("Nothing is queued.")
+            await ctx.send("Nothing is queued.")
 
     @commands.command(name="shuffle", description="New shuffle function that has to be called once and makes a new queue. Result is shown on \"queue\" commands now..")
     @commands.has_any_role("Dj", "DJ", "Administrator")
@@ -377,9 +368,9 @@ class music(commands.Cog):
                     randnum = random.randint(0, size - 1)
                     songlist[x] = songlist[randnum]
                     songlist[randnum] = temp
-                await ctx.channel.send("Finished.")
+                await ctx.send("Finished.")
             else:
-                await ctx.channel.send("Nothing playing!")
+                raise commands.CommandInvokeError("Nothing playing!")
 
         except Exception as error:
             print(error)
