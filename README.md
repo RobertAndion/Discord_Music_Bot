@@ -1,16 +1,11 @@
 # Discord Music Bot 
-### Created by Robert USF Computer Science.
-
-This is a personal project of mine to create an easy to use and reliable discord music bot.
-I hope you can find use in it as well!
-Check out our other project written in Node.js: https://github.com/RobertAndion/DiscordMusicBotNode
 
 ## General Setup
 
 ### Dependancies:
 
-You **must** have java 11 (or java 13) for lavalink.
-The bot is written in and requires Python3
+You **must** have java 11+ for lavalink.
+The bot is written in and requires Python3.
 You must install python-dotenv, discord.py, lavalink.py and psutil, links are listed below.
 * https://pypi.org/project/python-dotenv/
 * https://pypi.org/project/discord.py/
@@ -299,7 +294,7 @@ This function will add the entire queue to a given playlist.
 It does not add the currently playing song, this way if you make a playlist just for the queue,
 it will not add the currently playing song twice.
 
-### Note: All the functions in fileRead are used by commands and require no command to use (Helper functions). 
+#### Note: All the functions in fileProcessing are used by commands and require no command to use (Helper functions). 
 
 ## CPU Commands:
 ### NOTE: cpu.py is a new option and will require extra work to get working.
@@ -321,8 +316,9 @@ This will print a full JSON package of the available sensors then select the pro
 This provides more permanant information such as thread count, RAM, and currently available RAM.
 (Should be cross system compatible.)
 
+## Misc.
 
-Robert A -USF Computer Science
+Check out our other project written in Node.js: https://github.com/RobertAndion/DiscordMusicBotNode
 
 Todo/Possible adds in the future:
 Add a delete from queue function that removes a specific song from the queue based on position.
