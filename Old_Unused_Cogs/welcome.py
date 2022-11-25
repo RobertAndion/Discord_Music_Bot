@@ -16,5 +16,5 @@ class welcome(commands.Cog):
         await channel.send("Hello! " + str(member.display_name) + ", welcome to " + servername + "!") #You can customize this message.
         
 
-def setup(bot):
-    bot.add_cog(welcome(bot))
+async def setup(bot):
+    await bot.add_cog(welcome(bot))
