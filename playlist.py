@@ -9,6 +9,9 @@ import fileProcessing
 
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
+config = fileProcessing.read_config()
+roles = config["roles"]
+
 
 class playlist(commands.Cog):
     def __init__(self, bot):
@@ -19,7 +22,7 @@ class playlist(commands.Cog):
             await ctx.send(error.original)
 
     @commands.command(name="viewplaylist", aliases=["vpl"], description="Views all songs inside of a given playlist.")
-    @commands.has_any_role("DJ", 'Dj', 'Administrator')
+    @commands.has_any_role(*roles)
     async def view_playlist(self, ctx, *, list_name):
         list_collection = fileProcessing.playlist_read(list_name, ctx)
         if list_collection:
@@ -47,7 +50,7 @@ class playlist(commands.Cog):
                 "Playlist is empty or does not exist.")
 
     @commands.command(name="listplaylists", aliases=["lpl"], description="Lists all of a users playlists")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def list_playlists(self, ctx, page=1):
         # Stop here if the page is not a valid number (save processing time).
         if not isinstance(page, int):
@@ -81,7 +84,7 @@ class playlist(commands.Cog):
             await ctx.send("No playlists found, do you have any?")
 
     @commands.command(name="deleteplaylist", aliases=["dpl"], description="Used to delete an entire playlist.")
-    @commands.has_any_role("DJ", "Dj", "Administrator")
+    @commands.has_any_role(*roles)
     async def delete_playlist(self, ctx, *, playlist):
         result = fileProcessing.delete_playlist(ctx, playlist)
         if result == "Done":
@@ -92,7 +95,7 @@ class playlist(commands.Cog):
             await ctx.send("You have no playlists.")
 
     @commands.command(name="deletefromplaylist", aliases=["dfp"], description="Delete song from playlist based on its number in the playlist.")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def delete_from_playlist(self, ctx, value, *, playlist):
         try:
             result = fileProcessing.delete_from_playlist(
@@ -107,7 +110,7 @@ class playlist(commands.Cog):
             await ctx.send("Playlist not found.")
 
     @commands.command(name="createplaylist", aliases=['cpl'], description="Uses the currently playing song to start a new playlist with the inputted name")
-    @commands.has_any_role("DJ", "Dj", "Administrator")
+    @commands.has_any_role(*roles)
     async def create_playlist(self, ctx, *, playlist_name):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
@@ -118,7 +121,7 @@ class playlist(commands.Cog):
             await ctx.send("Please have the first song you want to add playing to make a new playlist.")
 
     @commands.command(name="addtoplaylist", aliases=["atp"], description="Adds currently playing song to the given playlist name as long as it exists.")
-    @commands.has_any_role("DJ", "Dj", "Administrator")
+    @commands.has_any_role(*roles)
     async def add_to_playlist(self, ctx, *, playlist_name):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
@@ -133,7 +136,7 @@ class playlist(commands.Cog):
             await ctx.send("Please have the first song you want to add playing to add it to the playlist.")
 
     @commands.command(name="renameplaylist", aliases=["rpl"], description="Renames a current list. Input as: current name,new name")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def rename_playlist(self, ctx, *, raw_name):
         status = fileProcessing.rename_playlist(ctx, raw_name)
         if status == "Success":
@@ -144,7 +147,7 @@ class playlist(commands.Cog):
             await ctx.send("Please format the command properly. .rpl current name,new name (MANDATORY COMMA)")
 
     @commands.command(name="addqueuetolist", aliases=["aqtp"], description="Adds the entire queue to a playlist.")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def add_queue_to_list(self, ctx, *, listname):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:

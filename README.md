@@ -7,32 +7,31 @@
 You **must** have java 11+ for lavalink.
 The bot is written in and requires Python3.
 You must install python-dotenv, discord.py, lavalink.py and psutil, links are listed below.
-* https://pypi.org/project/python-dotenv/
-* https://pypi.org/project/discord.py/
-* https://github.com/Devoxin/Lavalink.py
-* https://pypi.org/project/psutil/
+* [python-dotenv](https://pypi.org/project/python-dotenv/)
+* [discord.py](https://pypi.org/project/discord.py/)
+* [lavalink.py](https://github.com/Devoxin/Lavalink.py)
+* [psutil](https://pypi.org/project/psutil/)
 
 (psutil does not need to be installed if cpu functions are not needed, see more below.)
-
+### Lavalink
 Lava link is not my creation and can be found at:
 https://github.com/Frederikam/Lavalink/releases
 (It can also be found in other Git branches. Any should be fine)
-The lavalink.jar, 
-**MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
+The lavalink.jar, **MUST BE DOWNLOADED AND PLACED IN DIRECTORY**
 
 Keep the same file structure as the github repo for this to work, place Lavalink.jar at the "root" of the project.
-Also, .setup will send a message on how to configure the bot as long as you are the server admin.
 
 If you want to change the lavalink password you must change it in the application.yml
-and in both music.py and playlist.py on the commented lines where 'changeme123' is located.
+and in both music.py and playlist.py on every line where 'changeme123' is located.
 
+### Env File
 **Important:** You must also place your discord bot token in the .env file where prompted.
 
 ### Docker
 If you wish to run the bot in a docker container the Docker folder provides a
 dockerfile to do so. In order to use the file place the github files in a folder named Bot,
 then place the dockerfile on the same level as the Bot folder (not inside) then run a normal build 
-command. First set the correct .env and Playlist folder (if you have existing playlists) and they
+command. First set the correct .env and Playlist folder, if you have existing playlists, and they
 will automatically be brought into the container. 
 
 Docker start command:
@@ -137,19 +136,23 @@ python3 bot.py
 ```
 Both terminals must remain running for the bot to be live, consider using tmux.
 
-### Note:
-
-Before many commands will work, an initial "play" command will need to be made. Once this is done once
-it will not need to be redone for the entirety of the bots run time. This is not something to be fixed.
-The player object doesn't exist until at least one play related command has been issued in a session.
-Most commands have error handling for this now, run a play or playl command before trying to pause or 
-unpause etc. (makes logical sense anyways.)
-
-
 ## Preparing to use the bot:
 In order for music commands you must make a "Dj", "Administrator" or "DJ" role in discord
-and assign it to those you want to be able to play songs. 
-(Future releases will have variable role names you can set in the code)
+and assign it to those you want to be able to play songs.
+
+### Role configuration:
+The config.json file under resources can be altered to change the roles needed for music to your specific needs.
+```
+    "roles": [
+        "Dj",
+        "Administrator",
+        "DJ"
+    ]
+
+```
+You can replace any of the strings in the list with your custom role, remove extra roles, or add more by altering the json.
+
+[For more information on JSON formatting](https://www.w3schools.com/js/js_json_intro.asp)
 
 Admin functions will either need kick ban permissions for some commands or an "Admin" or "Administrator"
 role. Everything is essentially role based to keep unwanted users from flooding the bot.
@@ -157,11 +160,6 @@ role. Everything is essentially role based to keep unwanted users from flooding 
 ## COMMAND DOCUMENTATION:
 ### NOTE: 
 Anything in <> is an argument required by the function. Anything in () are alternate command shortcuts/names
-```
-.setup
-```
-This command, if you are a server admin, will send you a private message with a short summary of how to use the bot.
-It has no other function.
 
 ```
 .reboot
@@ -225,6 +223,7 @@ goes to the last page.
 ```
 .shuffle
 ```
+Shuffles all currently queued songs.
 This no longer uses the given shuffle function from lavalink.
 It is a custom function that shuffles in a finalized form,
 viewable in the queue command.
@@ -298,7 +297,7 @@ it will not add the currently playing song twice.
 
 ## CPU Commands:
 ### NOTE: cpu.py is a new option and will require extra work to get working.
-##### If this functionality is undesired you can remove line 34 from bot.py and delete cpu.py. You will also not need the psutil package
+##### If this functionality is undesired you can delete cpu.py from the Cogs folder. You will also not need to install the psutil package.
 
 ```
 .cpu_info <> (cpu)
@@ -322,4 +321,3 @@ Check out our other project written in Node.js: https://github.com/RobertAndion/
 
 Todo/Possible adds in the future:
 Add a delete from queue function that removes a specific song from the queue based on position.
-Update read me and add a config file that brings in roles and configurations, like delays ,rather than having it hard coded.
