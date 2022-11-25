@@ -4,8 +4,12 @@ import discord
 import lavalink
 from discord.ext import commands
 import asyncio
-import fileRead
+import fileProcessing
 url_rx = re.compile(r'https?://(?:www\.)?.+')
+
+config = fileProcessing.read_config()
+roles = config["roles"]
+voice_permissions_check_list = config["voice_permission_check_list"]
 
 
 class LavalinkVoiceClient(discord.VoiceClient):
@@ -110,8 +114,7 @@ class music(commands.Cog):
         """ This check ensures that the bot and command author are in the same voicechannel. """
         player = self.bot.lavalink.player_manager.create(ctx.guild.id)
 
-        should_connect = ctx.command.name in (
-            'play', 'playfromlist', 'skip', 'pause', 'unpause', 'clear', 'shuffle')
+        should_connect = ctx.command.name in voice_permissions_check_list
 
         if not ctx.author.voice or not ctx.author.voice.channel:
             # Our cog_command_error handler catches this and sends it to the voicechannel.
@@ -148,9 +151,9 @@ class music(commands.Cog):
 
     # Allows for a song to be played, does not make sure people are in the same chat.
     @commands.command(name='play', description=".play {song name} to play a song, will connect the bot.")
-    @commands.has_any_role('Dj', 'Administrator', 'DJ')
+    @commands.has_any_role(*roles)
     async def play_song(self, ctx, *, query: str):
-        fileRead.logUpdate(ctx, query)  # Add song requested to log
+        fileProcessing.logUpdate(ctx, query)  # Add song requested to log
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         query = query.strip('<>')
 
@@ -191,14 +194,14 @@ class music(commands.Cog):
         if not player.is_playing:
             await player.play()
 
-    # Needs work
     @commands.command(name="playfromlist", aliases=["pfpl", "playl"], description="Loads a playlist into the queue to be played.")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def play_from_list(self, ctx, *, playlist_name):
         """ Searches and plays a song from a given query. """
         # Get the player for this guild from cache.
-        fileRead.logUpdate(ctx, playlist_name)  # Add playlist name to log file
-        songlist = fileRead.play_playlist(ctx, playlist_name)
+        # Add playlist name to log file
+        fileProcessing.logUpdate(ctx, playlist_name)
+        songlist = fileProcessing.play_playlist(ctx, playlist_name)
         if songlist == False:
             return await ctx.send("Playlist not found.")
         await ctx.invoke(self.bot.get_command('play'), query=songlist[0])
@@ -221,9 +224,8 @@ class music(commands.Cog):
         if not player.is_playing:
             await player.play()
 
-    # skips currently playing song
     @commands.command(name='skip', description="Skips currently playing song.")
-    @commands.has_any_role('Dj', 'Administrator', 'DJ')
+    @commands.has_any_role(*roles)
     async def skip_song(self, ctx, amount: int = 1):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
@@ -246,7 +248,7 @@ class music(commands.Cog):
             raise commands.CommandInvokeError("Something went wrong...")
 
     @commands.command(name="clear", description="Clears all of the currently playing songs and makes the bot disconnect.")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def clear_queue(self, ctx):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
@@ -264,7 +266,7 @@ class music(commands.Cog):
         await ctx.send('Queue was cleared.')
 
     @commands.command(name='pause', aliases=["ps"], description="Pauses a song if one is playing.")
-    @commands.has_any_role('Dj', 'Administrator', 'DJ')
+    @commands.has_any_role(*roles)
     async def pause_bot(self, ctx):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
@@ -292,7 +294,7 @@ class music(commands.Cog):
             raise commands.CommandInvokeError("Unable to retrieve player...")
 
     @commands.command(name='unpause', aliases=['resume', 'start', 'up'], description="Unpauses a paused song.")
-    @commands.has_any_role('Dj', 'Administrator', 'DJ')
+    @commands.has_any_role(*roles)
     async def unpause_bot(self, ctx):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
@@ -306,7 +308,7 @@ class music(commands.Cog):
             raise commands.CommandInvokeError("Nothing playing.")
 
     @commands.command(name='queue', aliases=['playlist', 'songlist', 'upnext'], description="Shows songs up next in order, with the currently playing at the top.")
-    @commands.has_any_role('Dj', 'Administrator', 'DJ')
+    @commands.has_any_role(*roles)
     async def queue(self, ctx, page=1):
 
         if not isinstance(page, int):
@@ -352,7 +354,7 @@ class music(commands.Cog):
             await ctx.send("Nothing is queued.")
 
     @commands.command(name="shuffle", description="New shuffle function that has to be called once and makes a new queue. Result is shown on \"queue\" commands now..")
-    @commands.has_any_role("Dj", "DJ", "Administrator")
+    @commands.has_any_role(*roles)
     async def shuffle(self, ctx):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)

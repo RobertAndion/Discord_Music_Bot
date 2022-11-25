@@ -1,6 +1,6 @@
+import discord
 from discord.ext import commands
 import os
-import discord
 import asyncio
 import subprocess
 import shlex
@@ -13,6 +13,7 @@ intents.members = True
 
 client = commands.Bot(command_prefix='.', intents=intents)
 
+
 @client.event
 async def on_ready():
     print("Bot is live")
@@ -21,11 +22,13 @@ async def on_ready():
         if file.endswith(".py"):
             await client.load_extension(f'Cogs.{file[:-3]}')
 
+# TODO: Refactor so that shell files can go into a folder
 @client.command(name="reboot")
 @commands.is_owner()
 async def reboot(ctx):
     await ctx.send("Rebooting")
     subprocess.call(["sh", "./autorestart.sh"])
+
 
 @client.command(name="backupPlaylists")
 @commands.is_owner()
