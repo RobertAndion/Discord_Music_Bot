@@ -1,8 +1,4 @@
-from discord.ext import commands
-import discord
 import json
-from discord.utils import get
-from discord import Embed
 import os.path
 from os import path
 
@@ -64,8 +60,9 @@ def list_playlists(ctx):
     except:
         return []
 
-
 # function to create a new playlist in the JSON file or make a JSON file if none exists for the user
+
+
 def new_playlist(ctx, playlist_name, now_playing):
     userpath = os.path.join("Playlist", str(ctx.author.id))
     userpath = str(userpath) + ".json"
@@ -75,15 +72,14 @@ def new_playlist(ctx, playlist_name, now_playing):
             temp = [now_playing]
             data[playlist_name] = temp
             dataFinal = json.dumps(data, indent=1)
-            help_newplaylist(ctx, dataFinal)
+            write_out(ctx, dataFinal)
     else:
         dataStart = {playlist_name: [now_playing]}
         with open(userpath, "w") as write_file:
             json.dump(dataStart, write_file)
 
 
-# has no safety checks to write. needs to be done before hand only a helper function for within the doc
-def help_newplaylist(ctx, data):
+def write_out(ctx, data):
     userpath = os.path.join("Playlist", str(ctx.author.id))
     userpath = str(userpath) + ".json"
     file = open(userpath, "w")
@@ -100,7 +96,7 @@ def delete_playlist(ctx, playlist_name):
             try:
                 data.pop(playlist_name)
                 dataFinal = json.dumps(data, indent=1)
-                help_newplaylist(ctx, dataFinal)
+                write_out(ctx, dataFinal)
                 return "Done"
             except:
                 return "Not-Found"
@@ -117,7 +113,7 @@ def delete_from_playlist(ctx, playlist_name, selection):
                 data = json.load(read_file)
                 data[playlist_name].pop(selection - 1)
                 dataFinal = json.dumps(data, indent=1)
-                help_newplaylist(ctx, dataFinal)
+                write_out(ctx, dataFinal)
                 return "Done"
             except:
                 return "Not-Found"
@@ -125,8 +121,9 @@ def delete_from_playlist(ctx, playlist_name, selection):
     else:
         return "No-Playlists"
 
-
 # Reads json, finds playlists and add song then uses help_newplaylist to write back.
+
+
 def add_to_playlist(ctx, playlist_name, now_playing) -> bool:
     userpath = os.path.join("Playlist", str(ctx.author.id))
     userpath = str(userpath) + ".json"
@@ -137,14 +134,15 @@ def add_to_playlist(ctx, playlist_name, now_playing) -> bool:
                 temp = [now_playing]
                 data[playlist_name] += temp
                 dataFinal = json.dumps(data, indent=1)
-                help_newplaylist(ctx, dataFinal)
+                write_out(ctx, dataFinal)
                 return True
 
         except:
             return False
 
-
 # loads songs from a playlist to be parsed by the calling function
+
+
 def play_playlist(ctx, playlist_name):
     userpath = os.path.join("Playlist", str(ctx.author.id))
     userpath = str(userpath) + ".json"
@@ -179,9 +177,19 @@ def rename_playlist(ctx, raw_input) -> bool:
                     # store the same data as a new list.
                     data[splitNames[1].strip()] = specific
                     dataFinal = json.dumps(data, indent=1)
-                    help_newplaylist(ctx, dataFinal)
+                    write_out(ctx, dataFinal)
                     return "Success"
             except:
                 return "No-List"
     except:
         return "Invalid-Input"
+
+
+def read_config():
+    configPath = os.path.join("Resources", "config.json")
+    try:
+        with open(configPath, "r") as fileRead:
+            data = json.load(fileRead)
+            return data
+    except:
+        raise Exception("Config file not found!")
