@@ -1,0 +1,16 @@
+{
+    "roles": [
+        "Dj",
+        "Administrator",
+        "DJ"
+    ],
+    "voice_permission_check_list": [
+        "play",
+        "playfromlist",
+        "skip",
+        "pause",
+        "unpause",
+        "clear",
+        "shuffle"
+    ]
+}
