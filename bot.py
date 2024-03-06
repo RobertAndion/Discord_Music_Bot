@@ -23,6 +23,7 @@ async def on_ready():
             await client.load_extension(f'Cogs.{file[:-3]}')
 
 # TODO: Refactor so that shell files can go into a folder
+
 @client.command(name="reboot")
 @commands.is_owner()
 async def reboot(ctx):
