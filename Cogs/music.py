@@ -245,8 +245,6 @@ class music(commands.Cog):
             if amount > 0:
                 return await ctx.send("All songs skipped")
 
-            raise commands.CommandInvokeError("Something went wrong...")
-
     @commands.command(name="clear", description="Clears all of the currently playing songs and makes the bot disconnect.")
     @commands.has_any_role(*roles)
     async def clear_queue(self, ctx):
@@ -257,8 +255,6 @@ class music(commands.Cog):
 
         if not ctx.author.voice or (player.is_connected and ctx.author.voice.channel.id != int(player.channel_id)):
             return await ctx.send('You\'re not in my voicechannel!')
-
-        player.queue.clear()
 
         await player.stop()
 
@@ -274,10 +270,8 @@ class music(commands.Cog):
                 status = True
                 await ctx.send("Song has been paused.")
                 await player.set_pause(True)
-                i = 0
-                while i < 84:  # This will periodically check to see if it has been unpaused
+                for i in range(84):  # This will periodically check to see if it has been unpaused
                     await asyncio.sleep(5)  # (84 * 5 = 7 minutes)
-                    i = i + 1
                     # If its been unpaused no need to keep counting.
                     if not player.paused:
                         status = False
@@ -296,16 +290,13 @@ class music(commands.Cog):
     @commands.command(name='unpause', aliases=['resume', 'start', 'up'], description="Unpauses a paused song.")
     @commands.has_any_role(*roles)
     async def unpause_bot(self, ctx):
-        try:
-            player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if player.paused:
-                await ctx.send("Resuming song.")
-                await player.set_pause(False)
-            else:
-                raise commands.CommandInvokeError(
-                    "Nothing is paused to resume.")
-        except:
-            raise commands.CommandInvokeError("Nothing playing.")
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        if player.paused:
+            await ctx.send("Resuming song.")
+            await player.set_pause(False)
+        else:
+            raise commands.CommandInvokeError(
+                "Nothing is paused to resume.")
 
     @commands.command(name='queue', aliases=['playlist', 'songlist', 'upnext'], description="Shows songs up next in order, with the currently playing at the top.")
     @commands.has_any_role(*roles)
@@ -360,7 +351,6 @@ class music(commands.Cog):
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
             if player.is_playing:
                 songlist = player.queue
-                # random.shuffle(songlist) # This breaks my bot at times.. Custom shuffle to slow this down.
                 size = len(songlist)
                 for x in range(0, size):
                     if (x % 8 == 0):
@@ -374,7 +364,7 @@ class music(commands.Cog):
                 raise commands.CommandInvokeError("Nothing playing!")
 
         except Exception as error:
-            print(error)
+            pass
 
 
 async def setup(bot):
