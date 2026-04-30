@@ -49,7 +49,6 @@ class playlist(commands.Cog):
     @commands.command(name="listplaylists", aliases=["lpl"], description="Lists all of a users playlists")
     @commands.has_any_role(*roles)
     async def list_playlists(self, ctx, page=1):
-        # Stop here if the page is not a valid number (save processing time).
         if not isinstance(page, int):
             raise commands.CommandInvokeError("Please enter a valid number.")
 
@@ -67,7 +66,7 @@ class playlist(commands.Cog):
                     len(list_collection)) + "/" + str(len(list_collection))
                 embed.description = list_collection[len(
                     list_collection) - 1]
-            else:  # Valid input
+            else:
                 list_collection[selection] += '\n' + "Page: " + \
                     str(page) + "/" + str(len(list_collection))
                 embed.description = list_collection[selection]
@@ -102,7 +101,7 @@ class playlist(commands.Cog):
     async def create_playlist(self, ctx, *, playlist_name):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
-            songname = player.current['title']
+            songname = player.current.title
             fileProcessing.new_playlist(ctx, playlist_name, songname)
             await ctx.send(playlist_name + ", created.")
         else:
@@ -113,7 +112,7 @@ class playlist(commands.Cog):
     async def add_to_playlist(self, ctx, *, playlist_name):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         if player.is_playing:
-            songname = player.current['title']
+            songname = player.current.title
             passfail = fileProcessing.add_to_playlist(
                 ctx, playlist_name, songname)
             if passfail:
@@ -142,7 +141,7 @@ class playlist(commands.Cog):
             songlist = player.queue
             for song in songlist:
                 check = fileProcessing.add_to_playlist(
-                    ctx, listname, f"{song['title']}")
+                    ctx, listname, song.title)
                 if not check:
                     return await ctx.send("Operation failed. Make sure the playlist name is valid.")
             await ctx.send("Queue added to " + str(listname) + ".")
@@ -151,4 +150,3 @@ class playlist(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(playlist(bot))
-
