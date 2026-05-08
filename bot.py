@@ -4,6 +4,7 @@ import os
 import asyncio
 import subprocess
 import shlex
+import signal
 from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -28,25 +29,26 @@ async def on_ready():
 @commands.is_owner()
 async def reboot(ctx):
     await ctx.send("Rebooting")
-    subprocess.call(["sh", "./autorestart.sh"])
+    os.kill(os.getpid(), signal.SIGTERM)
 
 
 @client.command(name="backupPlaylists")
 @commands.is_owner()
 async def backup_playlists(ctx):
     await ctx.send("Backing up playlists and will send as a personal message.")
-    if os.path.isfile('./backup.zip'):
-        os.remove('./backup.zip')
+    backup_path = '/tmp/backup.zip'
+    if os.path.isfile(backup_path):
+        os.remove(backup_path)
 
-    zipCommand = shlex.split("zip -r backup.zip ./Playlist")
+    zipCommand = shlex.split(f"zip -r {backup_path} ./Playlist")
     outcome = subprocess.Popen(zipCommand)
     waitCounter = 10
     while outcome.poll() is None and waitCounter > 0:
         await asyncio.sleep(1)
         waitCounter = waitCounter - 1
 
-    if os.path.isfile('./backup.zip'):
-        await ctx.author.send(file=discord.File(r'./backup.zip'))
-        os.remove('./backup.zip')
+    if os.path.isfile(backup_path):
+        await ctx.author.send(file=discord.File(backup_path))
+        os.remove(backup_path)
 
 client.run(TOKEN)

@@ -18,4 +18,3 @@ docker run -d \
   -v musicbot-songlogs:/MusicBot/SongLog \
   --env-file .env \
   musicbot
-# Todo I feel like the -v stuff is wrong, it is a good longterm thing.
