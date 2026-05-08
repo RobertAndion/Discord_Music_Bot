@@ -350,6 +350,24 @@ class music(commands.Cog):
         except Exception as error:
             pass
 
+    @commands.command(name='removequeue', aliases=['rq'], description="Removes a song from the queue by its position number.")
+    @commands.has_any_role(*roles)
+    async def remove_from_queue(self, ctx, position: int):
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+
+        if not player.is_playing:
+            return await ctx.send("Nothing is queued.")
+
+        queue_length = len(player.queue)
+        if queue_length == 0:
+            return await ctx.send("There are no queued songs to remove.")
+
+        if position < 1 or position > queue_length:
+            return await ctx.send(f"Please provide a position between 1 and {queue_length}.")
+
+        removed = player.queue.pop(position - 1)
+        await ctx.send(f"Removed **{removed.title}** from the queue.")
+
 
 async def setup(bot):
     await bot.add_cog(music(bot))
