@@ -81,6 +81,8 @@ class playlist(commands.Cog):
         result = fileProcessing.delete_playlist(ctx, playlist)
         if result == "Done":
             await ctx.send("Playlist deleted.")
+        elif result == "No-Playlists":
+            await ctx.send("You have no playlists.")
         else:
             await ctx.send("Playlist not found. Check that it is spelled correctly or if it has already been deleted.")
 
