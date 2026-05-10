@@ -1,0 +1,4 @@
+discord.py
+lavalink>=5.0
+python-dotenv
+psutil
