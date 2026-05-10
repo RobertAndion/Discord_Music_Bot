@@ -1,3 +1,4 @@
+import os
 import re
 import random
 import discord
@@ -14,6 +15,7 @@ url_rx = re.compile(r'https?://(?:www\.)?.+')
 config = fileProcessing.read_config()
 roles = config["roles"]
 voice_permissions_check_list = config["voice_permission_check_list"]
+lavalink_password = os.getenv('LAVALINK_PASSWORD', 'changeme123')
 
 
 class LavalinkVoiceClient(discord.VoiceProtocol):
@@ -28,7 +30,7 @@ class LavalinkVoiceClient(discord.VoiceProtocol):
             self.client.lavalink.add_node(
                 host='localhost',
                 port=2333,
-                password='changeme123',
+                password=lavalink_password,
                 region='us',
                 name='default-node'
             )
@@ -91,11 +93,12 @@ class LavalinkVoiceClient(discord.VoiceProtocol):
 class music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self._auto_unpause_guilds: set = set()
 
         if not hasattr(bot, 'lavalink'):
             bot.lavalink = lavalink.Client(bot.user.id)
             bot.lavalink.add_node(
-                host='127.0.0.1', port=2333, password='changeme123', region='us', name='default-node')
+                host='127.0.0.1', port=2333, password=lavalink_password, region='us', name='default-node')
 
         self.lavalink: lavalink.Client = bot.lavalink
         self.lavalink.add_event_hooks(self)
@@ -193,7 +196,7 @@ class music(commands.Cog):
     async def play_from_list(self, ctx, *, playlist_name):
         fileProcessing.logUpdate(ctx, playlist_name)
         songlist = fileProcessing.play_playlist(ctx, playlist_name)
-        if songlist == False:
+        if songlist is False:
             return await ctx.send("Playlist not found.")
         await ctx.invoke(self.bot.get_command('play'), query=songlist[0])
         songlist.pop(0)
@@ -221,18 +224,16 @@ class music(commands.Cog):
     async def skip_song(self, ctx, amount: int = 1):
         try:
             player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            while (amount > 0):
+            while amount > 0:
                 amount -= 1
                 if not player.is_playing:
-                    raise commands.CommandInvokeError(
-                        "Nothing playing to skip.")
-                else:
-                    if amount % 2 == 0:
-                        await asyncio.sleep(.1)
-                    await player.skip()
-                    if amount == 0:
-                        await ctx.send("Song skipped.")
-        except:
+                    raise commands.CommandInvokeError("Nothing playing to skip.")
+                if amount % 2 == 0:
+                    await asyncio.sleep(.1)
+                await player.skip()
+                if amount == 0:
+                    await ctx.send("Song skipped.")
+        except Exception:
             if amount > 0:
                 return await ctx.send("All songs skipped")
 
@@ -255,26 +256,28 @@ class music(commands.Cog):
     @commands.command(name='pause', aliases=["ps"], description="Pauses a song if one is playing.")
     @commands.has_any_role(*roles)
     async def pause_bot(self, ctx):
-        try:
-            player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if player.is_playing:
-                status = True
-                await ctx.send("Song has been paused.")
-                await player.set_pause(True)
-                for i in range(84):
-                    await asyncio.sleep(5)
-                    if not player.paused:
-                        status = False
-                        break
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        if not player:
+            raise commands.CommandInvokeError("Unable to retrieve player...")
+        if not player.is_playing:
+            return await ctx.send("No song is playing to be paused.")
+        if ctx.guild.id in self._auto_unpause_guilds:
+            return await ctx.send("Song is already paused.")
 
-                if player.paused and player.is_playing and status is True:
+        self._auto_unpause_guilds.add(ctx.guild.id)
+        await player.set_pause(True)
+        await ctx.send("Song has been paused.")
+        try:
+            for _ in range(84):
+                await asyncio.sleep(5)
+                if not player.paused:
+                    break
+            else:
+                if player.is_playing:
                     await player.set_pause(False)
                     await ctx.send("Automatically unpaused.")
-
-            else:
-                await ctx.send("No song is playing to be paused.")
-        except:
-            raise commands.CommandInvokeError("Unable to retrieve player...")
+        finally:
+            self._auto_unpause_guilds.discard(ctx.guild.id)
 
     @commands.command(name='unpause', aliases=['resume', 'start', 'up'], description="Unpauses a paused song.")
     @commands.has_any_role(*roles)
@@ -335,24 +338,13 @@ class music(commands.Cog):
     @commands.command(name="shuffle", description="Shuffles the current queue.")
     @commands.has_any_role(*roles)
     async def shuffle(self, ctx):
-        try:
-            player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-            if player.is_playing:
-                songlist = player.queue
-                size = len(songlist)
-                for x in range(0, size):
-                    if (x % 8 == 0):
-                        await asyncio.sleep(0.1)
-                    temp = songlist[x]
-                    randnum = random.randint(0, size - 1)
-                    songlist[x] = songlist[randnum]
-                    songlist[randnum] = temp
-                await ctx.send("Finished.")
-            else:
-                raise commands.CommandInvokeError("Nothing playing!")
-
-        except Exception:
-            await ctx.send("Shuffle failed. Nothing may be queued.")
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        if not player or not player.is_playing:
+            return await ctx.send("Nothing playing to shuffle.")
+        if not player.queue:
+            return await ctx.send("Nothing queued to shuffle.")
+        random.shuffle(player.queue)
+        await ctx.send("Finished.")
 
     @commands.command(name='removequeue', aliases=['rq'], description="Removes a song from the queue by its position number.")
     @commands.has_any_role(*roles)
