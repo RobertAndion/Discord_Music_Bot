@@ -1,29 +1,57 @@
-server: # REST and WS server
+server:
   port: 2333
   address: 0.0.0.0
+  http2:
+    enabled: false
+
 lavalink:
+  plugins:
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
+      snapshot: false
   server:
     password: "changeme123"
     sources:
-      youtube: true
+      youtube: false  # disabled in favour of youtube-source plugin
       bandcamp: true
       soundcloud: true
       twitch: true
       vimeo: true
-      mixer: true
       http: true
       local: false
+    filters:
+      volume: true
+      equalizer: true
+      karaoke: true
+      timescale: true
+      tremolo: true
+      vibrato: true
+      distortion: true
+      rotation: true
+      channelMix: true
+      lowPass: true
     bufferDurationMs: 400
-    youtubePlaylistLoadLimit: 6 # Number of pages at 100 each
+    frameBufferDurationMs: 5000
+    opusEncodingQuality: 10
+    resamplingQuality: LOW
+    trackStuckThresholdMs: 10000
+    useSeekGhosting: true
+    youtubePlaylistLoadLimit: 6
+    playerUpdateInterval: 5
     youtubeSearchEnabled: true
     soundcloudSearchEnabled: true
     gc-warnings: true
-    #ratelimit:
-      #ipBlocks: ["1.0.0.0/8", "..."] # list of ip blocks
-      #excludedIps: ["...", "..."] # ips which should be explicit excluded from usage by lavalink
-      #strategy: "RotateOnBan" # RotateOnBan | LoadBalance | NanoSwitch | RotatingNanoSwitch
-      #searchTriggersFail: true # Whether a search 429 should trigger marking the ip as failing
-      #retryLimit: -1 # -1 = use default lavaplayer value | 0 = infinity | >0 = retry will happen this numbers times
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - WEBEMBEDDED
 
 metrics:
   prometheus:
@@ -32,16 +60,10 @@ metrics:
 
 sentry:
   dsn: ""
-#  tags:
-#    some_key: some_value
-#    another_key: another_value
 
 logging:
   file:
-    max-history: 30
-    max-size: 1GB
-  path: ./logs/
-
+    path: ./logs/
   level:
     root: INFO
     lavalink: INFO
