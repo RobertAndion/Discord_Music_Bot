@@ -1,14 +1,17 @@
 import json
+import os
 import os.path
 from os import path
 
 
+def _playlist_path(ctx) -> str:
+    return os.path.join("Playlist", f"{ctx.author.id}.json")
+
+
 def logUpdate(ctx, songName):
-    user_file = os.path.join("SongLog", str(ctx.author.id))
-    user_file = str(user_file) + ".txt"
-    user_write = open(user_file, "a")
-    user_write.write(str(songName) + "\n")
-    user_write.close()
+    user_file = os.path.join("SongLog", f"{ctx.author.id}.txt")
+    with open(user_file, "a") as f:
+        f.write(str(songName) + "\n")
 
 
 def page_format(raw_input) -> list:
@@ -28,8 +31,7 @@ def page_format(raw_input) -> list:
 
 
 def playlist_read(listname, ctx):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
+    userpath = _playlist_path(ctx)
     i = 1
     try:
         with open(userpath, "r") as fileRead:
@@ -40,13 +42,12 @@ def playlist_read(listname, ctx):
                 final += str(i) + ": " + item + "\n"
                 i = i + 1
             return page_format(final)
-    except:
+    except (FileNotFoundError, KeyError, json.JSONDecodeError):
         return []
 
 
 def list_playlists(ctx):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
+    userpath = _playlist_path(ctx)
     i = 1
     final = ""
     try:
@@ -57,22 +58,17 @@ def list_playlists(ctx):
                 i = i + 1
 
             return page_format(final)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError):
         return []
-
-# function to create a new playlist in the JSON file or make a JSON file if none exists for the user
 
 
 def new_playlist(ctx, playlist_name, now_playing):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
+    userpath = _playlist_path(ctx)
     if path.exists(userpath):
         with open(userpath, "r") as read_file:
             data = json.load(read_file)
-            temp = [now_playing]
-            data[playlist_name] = temp
-            dataFinal = json.dumps(data, indent=1)
-            write_out(ctx, dataFinal)
+            data[playlist_name] = [now_playing]
+            write_out(ctx, json.dumps(data, indent=1))
     else:
         dataStart = {playlist_name: [now_playing]}
         with open(userpath, "w") as write_file:
@@ -80,109 +76,84 @@ def new_playlist(ctx, playlist_name, now_playing):
 
 
 def write_out(ctx, data):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
-    file = open(userpath, "w")
-    file.write(data)
-    file.close()
+    userpath = _playlist_path(ctx)
+    with open(userpath, "w") as f:
+        f.write(data)
 
 
 def delete_playlist(ctx, playlist_name):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
+    userpath = _playlist_path(ctx)
     if path.exists(userpath):
-        with open(userpath, "r") as read_file:
-            data = json.load(read_file)
-            try:
-                data.pop(playlist_name)
-                dataFinal = json.dumps(data, indent=1)
-                write_out(ctx, dataFinal)
-                return "Done"
-            except:
-                return "Not-Found"
+        try:
+            with open(userpath, "r") as read_file:
+                data = json.load(read_file)
+            data.pop(playlist_name)
+            write_out(ctx, json.dumps(data, indent=1))
+            return "Done"
+        except KeyError:
+            return "Not-Found"
+        except (json.JSONDecodeError, OSError):
+            return "Not-Found"
     else:
         return "No-Playlists"
 
 
 def delete_from_playlist(ctx, playlist_name, selection):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
-    if path.exists(userpath):
-        with open(userpath, "r") as read_file:
-            try:
-                data = json.load(read_file)
-                data[playlist_name].pop(selection - 1)
-                dataFinal = json.dumps(data, indent=1)
-                write_out(ctx, dataFinal)
-                return "Done"
-            except:
-                return "Not-Found"
-
-    else:
-        return "No-Playlists"
-
-# Reads json, finds playlists and add song then uses help_newplaylist to write back.
-
-
-def add_to_playlist(ctx, playlist_name, now_playing) -> bool:
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
+    userpath = _playlist_path(ctx)
     if path.exists(userpath):
         try:
             with open(userpath, "r") as read_file:
                 data = json.load(read_file)
-                temp = [now_playing]
-                data[playlist_name] += temp
-                dataFinal = json.dumps(data, indent=1)
-                write_out(ctx, dataFinal)
-                return True
+            data[playlist_name].pop(selection - 1)
+            write_out(ctx, json.dumps(data, indent=1))
+            return "Done"
+        except (KeyError, IndexError, json.JSONDecodeError):
+            return "Not-Found"
+    else:
+        return "No-Playlists"
 
-        except:
+
+def add_to_playlist(ctx, playlist_name, now_playing) -> bool:
+    userpath = _playlist_path(ctx)
+    if path.exists(userpath):
+        try:
+            with open(userpath, "r") as read_file:
+                data = json.load(read_file)
+            data[playlist_name].append(now_playing)
+            write_out(ctx, json.dumps(data, indent=1))
+            return True
+        except (KeyError, json.JSONDecodeError, OSError):
             return False
-
-# loads songs from a playlist to be parsed by the calling function
+    return False
 
 
 def play_playlist(ctx, playlist_name):
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
+    userpath = _playlist_path(ctx)
     if path.exists(userpath):
-        # using with auto closes the file after.
         with open(userpath, "r") as read_file:
             data = json.load(read_file)
             if playlist_name in data:
-                songlist = data[playlist_name]
-                return songlist
-            else:
-                # return false if playlist doesnt exist which will be caught by music.py and output playlist doesnt exist.
-                return False
-    else:
-        return False  # same as above comment
+                return data[playlist_name]
+            return False
+    return False
 
 
-def rename_playlist(ctx, raw_input) -> bool:
-    userpath = os.path.join("Playlist", str(ctx.author.id))
-    userpath = str(userpath) + ".json"
-    splitNames = raw_input.split(',')
-    try:
-        if splitNames[0] is not None and splitNames[1] is not None:
-            data = ""
-            specific = ""
-            try:
-                with open(userpath, "r") as fileRead:
-                    data = json.load(fileRead)
-                    specific = data[splitNames[0].strip()]
-                with open(userpath, "w") as fileRead:
-                    data.pop(splitNames[0].strip())  # pop off old playlist
-                    # store the same data as a new list.
-                    data[splitNames[1].strip()] = specific
-                    dataFinal = json.dumps(data, indent=1)
-                    write_out(ctx, dataFinal)
-                    return "Success"
-            except:
-                return "No-List"
-    except:
+def rename_playlist(ctx, raw_input) -> str:
+    userpath = _playlist_path(ctx)
+    parts = [s.strip() for s in raw_input.split(',')]
+    if len(parts) < 2 or not parts[0] or not parts[1]:
         return "Invalid-Input"
+    try:
+        with open(userpath, "r") as f:
+            data = json.load(f)
+        specific = data.pop(parts[0])
+        data[parts[1]] = specific
+        write_out(ctx, json.dumps(data, indent=1))
+        return "Success"
+    except FileNotFoundError:
+        return "No-List"
+    except (KeyError, json.JSONDecodeError):
+        return "No-List"
 
 
 def read_config():
@@ -191,5 +162,5 @@ def read_config():
         with open(configPath, "r") as fileRead:
             data = json.load(fileRead)
             return data
-    except:
-        raise Exception("Config file not found!")
+    except (FileNotFoundError, json.JSONDecodeError):
+        raise Exception("Config file not found or malformed!")

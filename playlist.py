@@ -1,13 +1,8 @@
 from discord.ext import commands
 import discord
-import lavalink
 import asyncio
-from discord import utils
 from discord import Embed
-import re
 import fileProcessing
-
-url_rx = re.compile(r'https?://(?:www\.)?.+')
 
 config = fileProcessing.read_config()
 roles = config["roles"]
@@ -26,21 +21,20 @@ class playlist(commands.Cog):
     async def view_playlist(self, ctx, *, list_name):
         list_collection = fileProcessing.playlist_read(list_name, ctx)
         if list_collection:
-            embed = Embed()
             double = ''
             x = 1
             for section in list_collection:
                 double += section
 
                 if x % 2 == 0:
-                    embed.description = double
+                    embed = Embed(description=double)
                     await ctx.send(embed=embed)
                     await asyncio.sleep(1)
                     double = ''
-                x = x + 1
+                x += 1
 
             if len(list_collection) % 2 != 0:
-                embed.description = double
+                embed = Embed(description=double)
                 await ctx.send(embed=embed)
         else:
             raise commands.CommandInvokeError(
@@ -56,16 +50,13 @@ class playlist(commands.Cog):
         if list_collection:
             selection = page - 1
             embed = Embed()
-            if int(selection) < 0:
-                list_collection[0] += "'\n' + Page: 1/" + \
-                    str(len(list_collection))
+            if selection < 0:
+                list_collection[0] += "\nPage: 1/" + str(len(list_collection))
                 embed.description = list_collection[0]
-
-            elif int(selection) > len(list_collection) - 1:
-                list_collection[len(list_collection) - 1] += "'\n' + Page: " + str(
+            elif selection > len(list_collection) - 1:
+                list_collection[len(list_collection) - 1] += "\nPage: " + str(
                     len(list_collection)) + "/" + str(len(list_collection))
-                embed.description = list_collection[len(
-                    list_collection) - 1]
+                embed.description = list_collection[len(list_collection) - 1]
             else:
                 list_collection[selection] += '\n' + "Page: " + \
                     str(page) + "/" + str(len(list_collection))
@@ -88,9 +79,8 @@ class playlist(commands.Cog):
 
     @commands.command(name="deletefromplaylist", aliases=["dfp"], description="Delete song from playlist based on its number in the playlist.")
     @commands.has_any_role(*roles)
-    async def delete_from_playlist(self, ctx, value, *, playlist):
-        result = fileProcessing.delete_from_playlist(
-            ctx, playlist, int(value))
+    async def delete_from_playlist(self, ctx, value: int, *, playlist):
+        result = fileProcessing.delete_from_playlist(ctx, playlist, value)
         if result == "Done":
             await ctx.send("Song deleted from playlist.")
         elif result == "Not-Found":
@@ -102,27 +92,24 @@ class playlist(commands.Cog):
     @commands.has_any_role(*roles)
     async def create_playlist(self, ctx, *, playlist_name):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        if player.is_playing:
-            songname = player.current.title
-            fileProcessing.new_playlist(ctx, playlist_name, songname)
-            await ctx.send(playlist_name + ", created.")
-        else:
-            await ctx.send("Please have the first song you want to add playing to make a new playlist.")
+        if not player or not player.is_playing:
+            return await ctx.send("Please have the first song you want to add playing to make a new playlist.")
+        songname = player.current.title
+        fileProcessing.new_playlist(ctx, playlist_name, songname)
+        await ctx.send(playlist_name + ", created.")
 
     @commands.command(name="addtoplaylist", aliases=["atp"], description="Adds currently playing song to the given playlist name as long as it exists.")
     @commands.has_any_role(*roles)
     async def add_to_playlist(self, ctx, *, playlist_name):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        if player.is_playing:
-            songname = player.current.title
-            passfail = fileProcessing.add_to_playlist(
-                ctx, playlist_name, songname)
-            if passfail:
-                await ctx.send("Song added")
-            else:
-                await ctx.send("Playlist needs to be created before you can add to it.")
+        if not player or not player.is_playing:
+            return await ctx.send("Please have the first song you want to add playing to add it to the playlist.")
+        songname = player.current.title
+        passfail = fileProcessing.add_to_playlist(ctx, playlist_name, songname)
+        if passfail:
+            await ctx.send("Song added")
         else:
-            await ctx.send("Please have the first song you want to add playing to add it to the playlist.")
+            await ctx.send("Playlist needs to be created before you can add to it.")
 
     @commands.command(name="renameplaylist", aliases=["rpl"], description="Renames a current list. Input as: current name,new name")
     @commands.has_any_role(*roles)
@@ -139,16 +126,14 @@ class playlist(commands.Cog):
     @commands.has_any_role(*roles)
     async def add_queue_to_list(self, ctx, *, listname):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
-        if player.is_playing:
-            songlist = player.queue
-            for song in songlist:
-                check = fileProcessing.add_to_playlist(
-                    ctx, listname, song.title)
-                if not check:
-                    return await ctx.send("Operation failed. Make sure the playlist name is valid.")
-            await ctx.send("Queue added to " + str(listname) + ".")
-        else:
+        if not player or not player.is_playing:
             raise commands.CommandInvokeError("There is nothing playing.")
+        songlist = player.queue
+        for song in songlist:
+            check = fileProcessing.add_to_playlist(ctx, listname, song.title)
+            if not check:
+                return await ctx.send("Operation failed. Make sure the playlist name is valid.")
+        await ctx.send("Queue added to " + str(listname) + ".")
 
 async def setup(bot):
     await bot.add_cog(playlist(bot))
