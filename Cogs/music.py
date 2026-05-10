@@ -49,7 +49,9 @@ class LavalinkVoiceClient(discord.VoiceProtocol):
             await self._destroy()
             return
 
-        self.channel = self.client.get_channel(int(channel_id))
+        channel = self.client.get_channel(int(channel_id))
+        if channel is not None:
+            self.channel = channel
 
         lavalink_data = {
             't': 'VOICE_STATE_UPDATE',
@@ -64,7 +66,7 @@ class LavalinkVoiceClient(discord.VoiceProtocol):
     async def disconnect(self, *, force: bool = False) -> None:
         player = self.lavalink.player_manager.get(self.channel.guild.id)
 
-        if not force and not player.is_connected:
+        if player is None or (not force and not player.is_connected):
             return
 
         await self.channel.guild.change_voice_state(channel=None)
@@ -144,7 +146,7 @@ class music(commands.Cog):
         guild_id = event.player.guild_id
         guild = self.bot.get_guild(guild_id)
 
-        if guild is not None:
+        if guild is not None and guild.voice_client is not None:
             await guild.voice_client.disconnect(force=True)
 
     @commands.command(name='play', description=".play {song name} to play a song, will connect the bot.")
@@ -278,6 +280,8 @@ class music(commands.Cog):
     @commands.has_any_role(*roles)
     async def unpause_bot(self, ctx):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        if not player:
+            raise commands.CommandInvokeError("Nothing playing.")
         if player.paused:
             await ctx.send("Resuming song.")
             await player.set_pause(False)
@@ -347,15 +351,15 @@ class music(commands.Cog):
             else:
                 raise commands.CommandInvokeError("Nothing playing!")
 
-        except Exception as error:
-            pass
+        except Exception:
+            await ctx.send("Shuffle failed. Nothing may be queued.")
 
     @commands.command(name='removequeue', aliases=['rq'], description="Removes a song from the queue by its position number.")
     @commands.has_any_role(*roles)
     async def remove_from_queue(self, ctx, position: int):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
 
-        if not player.is_playing:
+        if not player or not player.is_playing:
             return await ctx.send("Nothing is queued.")
 
         queue_length = len(player.queue)
