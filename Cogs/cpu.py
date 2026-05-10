@@ -27,10 +27,21 @@ class cpu(commands.Cog):
         embed.title = 'CPU Information'
         embed.description = str(psutil.cpu_percent(
             interval=1)) + "% CPU Usage \n"
-        # embed.description += str(psutil.sensors_temperatures(fahrenheit=False)["k10temp"][0][1]) + " C \n" Manjaro version
-        # This works on Ubuntu. You will have to change this for your hardware, remove ["coretemp"][0][1] to print the full package and then pick.
-        embed.description += str(psutil.sensors_temperatures(
-            fahrenheit=False)["coretemp"][0][1]) + " C \n"
+
+        try:
+            temps = psutil.sensors_temperatures(fahrenheit=False)
+            if temps:
+                for key in ("coretemp", "k10temp", "cpu_thermal"):
+                    if key in temps:
+                        embed.description += str(temps[key][0][1]) + " C \n"
+                        break
+                else:
+                    embed.description += "Temperature: N/A\n"
+            else:
+                embed.description += "Temperature: N/A\n"
+        except AttributeError:
+            embed.description += "Temperature: N/A\n"
+
         embed.description += str(psutil.getloadavg()
                                  [1]) + " average load over the last 5 minutes"
         await ctx.channel.send(embed=embed)

@@ -1,0 +1,4 @@
+discord.py~=2.4
+lavalink>=5.0,<6.0
+python-dotenv~=1.0
+psutil~=6.0

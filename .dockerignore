@@ -1,0 +1,13 @@
+.git
+.env
+.DS_Store
+.claude/
+__pycache__/
+*.pyc
+*.md
+Pipfile
+Pipfile.lock
+Docker/
+Old_Unused_Cogs/
+autorestart.sh
+kill.sh

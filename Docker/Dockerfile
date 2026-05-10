@@ -1,18 +1,40 @@
-FROM ubuntu
+# ---------- BUILD STAGE ----------
+FROM python:3.13-slim-bookworm AS builder
+
 RUN apt-get update && \
-    apt-get full-upgrade -y && \
-    apt-get install python3 -y && \
-    apt-get install python3-pip -y && \
-    apt-get install tmux -y && \
-    apt-get install openjdk-13-jre-headless -y && \
-    apt-get install zip -y
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip && \
-    pip3 install discord.py lavalink python-dotenv psutil && \
-    apt-get remove python3-pip -y
+WORKDIR /MusicBot
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-COPY ./Bot /MusicBot
+# ---------- RUNTIME STAGE ----------
+FROM python:3.13-slim-bookworm
 
-RUN groupadd -g 1000 basicuser && useradd -r -u 1000 -g basicuser basicuser
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        openjdk-21-jre-headless \
+        ca-certificates \
+        zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /MusicBot
+
+COPY --from=builder /install /usr/local
+COPY . .
+
+RUN mkdir -p logs plugins && \
+    groupadd -g 999 basicuser && useradd -r -u 999 -g basicuser basicuser && \
+    chown -R basicuser:basicuser /MusicBot
 
 USER basicuser
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD python3 -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('localhost',2333)); s.close()"
+
+CMD ["bash", "startup.sh"]
