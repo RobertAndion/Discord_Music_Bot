@@ -1,6 +1,6 @@
 from discord.ext import commands
-from discord.utils import get
 import discord
+import asyncio
 import psutil
 
 
@@ -8,7 +8,7 @@ class cpu(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='serverinfo', description="Permanant server hardware information")
+    @commands.command(name='serverinfo', description="Permanent server hardware information")
     async def server_info(self, ctx):
         embed = discord.Embed(color=discord.Color.blurple())
         embed.title = 'Server Information'
@@ -25,8 +25,8 @@ class cpu(commands.Cog):
     async def cpu_info(self, ctx):
         embed = discord.Embed(color=discord.Color.blurple())
         embed.title = 'CPU Information'
-        embed.description = str(psutil.cpu_percent(
-            interval=1)) + "% CPU Usage \n"
+        cpu_percent = await asyncio.to_thread(psutil.cpu_percent, 1)
+        embed.description = str(cpu_percent) + "% CPU Usage \n"
 
         try:
             temps = psutil.sensors_temperatures(fahrenheit=False)
