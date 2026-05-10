@@ -18,10 +18,12 @@ client = commands.Bot(command_prefix='.', intents=intents)
 @client.event
 async def on_ready():
     print("Bot is live")
-    await client.load_extension('playlist')
-    for file in os.listdir("./Cogs"):
-        if file.endswith(".py"):
-            await client.load_extension(f'Cogs.{file[:-3]}')
+    extensions_to_load = ['playlist'] + [
+        f'Cogs.{f[:-3]}' for f in os.listdir("./Cogs") if f.endswith(".py")
+    ]
+    for ext in extensions_to_load:
+        if ext not in client.extensions:
+            await client.load_extension(ext)
 
 # TODO: Refactor so that shell files can go into a folder
 
@@ -45,7 +47,10 @@ async def backup_playlists(ctx):
     waitCounter = 10
     while outcome.poll() is None and waitCounter > 0:
         await asyncio.sleep(1)
-        waitCounter = waitCounter - 1
+        waitCounter -= 1
+
+    if outcome.returncode != 0:
+        return await ctx.send("Backup failed.")
 
     if os.path.isfile(backup_path):
         await ctx.author.send(file=discord.File(backup_path))
