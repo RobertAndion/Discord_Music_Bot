@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+cleanup() { kill "$(jobs -p)" 2>/dev/null; }
+trap cleanup EXIT
+
 java -jar Lavalink.jar &
 
 # Wait up to 90s for Lavalink (first run downloads the YouTube plugin)
