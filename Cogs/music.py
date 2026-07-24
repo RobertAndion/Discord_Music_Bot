@@ -160,7 +160,7 @@ class music(commands.Cog):
         query = query.strip('<>')
 
         if not url_rx.match(query):
-            query = f'ytsearch:{query}'
+            query = f'scsearch:{query}'
 
         results = await player.node.get_tracks(query)
 
@@ -204,7 +204,7 @@ class music(commands.Cog):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         for song in songlist:
             try:
-                query = f'ytsearch:{song}'
+                query = f'scsearch:{song}'
                 results = await player.node.get_tracks(query)
                 if not results or not results.tracks:
                     continue
