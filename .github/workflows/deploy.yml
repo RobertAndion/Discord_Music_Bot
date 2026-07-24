@@ -46,8 +46,17 @@ jobs:
           # -tt forces a pseudo-TTY on the remote so its output is line-buffered
           # and flushed immediately — without it, docker build output is
           # block-buffered over the pipe and only appears when the step finishes.
+          # ServerAlive* keeps the connection from sitting silently long enough
+          # for an intermediate network hop to drop it once the deploy is done.
+          # The trailing `exit` forces the remote shell to close the session
+          # itself instead of relying on stdin EOF to propagate over the pty —
+          # without it, ssh can hang after the script finishes and the run only
+          # ends when the idle connection is dropped ("Broken pipe", exit 255),
+          # even though the deploy itself already completed successfully.
           ssh -tt -i ~/.ssh/deploy_key -p "$DROPLET_SSH_PORT" \
               -o StrictHostKeyChecking=yes \
+              -o ServerAliveInterval=15 \
+              -o ServerAliveCountMax=4 \
               "$DROPLET_USER@$DROPLET_HOST" \
               "DEPLOY_PATH='$DEPLOY_PATH' DEPLOY_BRANCH='$DEPLOY_BRANCH' \
                DISCORD_TOKEN='$DISCORD_TOKEN' LAVALINK_PASSWORD='$LAVALINK_PASSWORD' \
@@ -59,4 +68,5 @@ jobs:
           git reset --hard "origin/$DEPLOY_BRANCH"
           git clean -fd -e .env -e Lavalink.jar
           bash deploy/deploy.sh
+          exit
           REMOTE
