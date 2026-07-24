@@ -43,7 +43,10 @@ jobs:
           # --- Run the deploy, streaming remote stdout/stderr live ---
           # Secrets are passed as the remote bash's environment; the heredoc is
           # the script it runs (quoted so it expands on the droplet, not here).
-          ssh -i ~/.ssh/deploy_key -p "$DROPLET_SSH_PORT" \
+          # -tt forces a pseudo-TTY on the remote so its output is line-buffered
+          # and flushed immediately — without it, docker build output is
+          # block-buffered over the pipe and only appears when the step finishes.
+          ssh -tt -i ~/.ssh/deploy_key -p "$DROPLET_SSH_PORT" \
               -o StrictHostKeyChecking=yes \
               "$DROPLET_USER@$DROPLET_HOST" \
               "DEPLOY_PATH='$DEPLOY_PATH' DEPLOY_BRANCH='$DEPLOY_BRANCH' \
