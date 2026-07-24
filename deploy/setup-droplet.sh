@@ -27,6 +27,9 @@ DEPLOY_BRANCH="${DEPLOY_BRANCH:-master}"
 # with the same key you already use for root.
 AUTHORIZED_KEY="${AUTHORIZED_KEY:-}"
 COPY_ROOT_KEYS="${COPY_ROOT_KEYS:-true}"
+# Swap keeps memory-hungry Docker builds from being OOM-killed on small droplets
+# (DO droplets ship with none). Set SWAP_SIZE=0 to skip.
+SWAP_SIZE="${SWAP_SIZE:-2G}"
 
 # ---------- Ensure we're root ----------
 if [[ "$EUID" -ne 0 ]]; then
@@ -61,6 +64,22 @@ fi
 echo "==> Enabling Docker service..."
 systemctl enable docker
 systemctl start docker
+
+echo "==> Ensuring swap exists (Docker builds are memory-hungry)..."
+if [[ "$SWAP_SIZE" == "0" ]]; then
+    echo "    SWAP_SIZE=0, skipping."
+elif swapon --show | grep -q .; then
+    echo "    Swap already active, skipping."
+else
+    # fallocate can fail on some filesystems (needs contiguous blocks); fall back to dd.
+    fallocate -l "$SWAP_SIZE" /swapfile 2>/dev/null \
+        || dd if=/dev/zero of=/swapfile bs=1M count="$(( ${SWAP_SIZE%G} * 1024 ))" status=none
+    chmod 600 /swapfile
+    mkswap /swapfile >/dev/null
+    swapon /swapfile
+    grep -q '^/swapfile ' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    echo "    Added ${SWAP_SIZE} swap."
+fi
 
 echo "==> Creating deploy user..."
 if ! id -u "$DEPLOY_USER" >/dev/null 2>&1; then
