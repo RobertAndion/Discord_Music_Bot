@@ -17,4 +17,4 @@ docker run -d \
   -v musicbot-playlists:/MusicBot/Playlist \
   -v musicbot-songlogs:/MusicBot/SongLog \
   --env-file .env \
-  musicbot
+  discord-music-bot:latest
