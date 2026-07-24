@@ -81,19 +81,49 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | `LAVALINK_PASSWORD` | ⬜ | Any string; defaults to `changeme123` if omitted |
 | `DEPLOY_PATH` | ⬜ | Defaults to `/opt/musicbot` |
 | `DROPLET_SSH_PORT` | ⬜ | Defaults to `22` |
+| `MUSICBOT_DATA_DIR` | ⬜ | Path to a mounted block-storage volume for playlists (see below). Empty = Docker named volumes. |
 
 ## 4. Deploy
 
 - **Automatic:** merge/push to `master`.
 - **Manual:** Actions tab → *Deploy to DigitalOcean* → **Run workflow**.
 
-Watch the run's logs in the Actions tab; the final step prints the container
-status. On the droplet you can check with:
+The deploy step uses native `ssh`, so the remote build output — `git` sync,
+`docker build`, container restart — **streams live** into the Actions log as it
+runs. On the droplet you can also check:
 
 ```bash
 docker ps --filter name=musicbot
 docker logs -f musicbot
 ```
+
+---
+
+## Persistent playlists with Block Storage
+
+By default, playlists/song-logs/plugins are stored in **Docker named volumes**.
+They already survive deploys, but they live on the droplet's boot disk — so they
+are lost if the droplet is destroyed or rebuilt. Attaching a **DigitalOcean
+Block Storage volume** keeps this data on a separate, durable disk you can
+snapshot, resize, and re-attach to a new droplet.
+
+1. **Create & attach** a Volume in the DO control panel (Volumes → Create,
+   attach it to your droplet). Note the size — playlists are tiny, 1 GB is plenty.
+2. **Prepare it** (once, as root on the droplet). Find the device path, then run
+   the helper — it formats a blank volume (never an existing one), mounts it at
+   `/mnt/musicbot-data` via `/etc/fstab`, and creates the data directories owned
+   by the container user:
+   ```bash
+   ls -l /dev/disk/by-id/ | grep -i DO_Volume
+   DEVICE=/dev/disk/by-id/scsi-0DO_Volume_<name> bash deploy/setup-volume.sh
+   ```
+3. **Migrate existing playlists** (only if you were already running with named
+   volumes) — the script prints the exact `docker run ... cp` command to copy them.
+4. **Point deploys at it** by setting the `MUSICBOT_DATA_DIR` secret to
+   `/mnt/musicbot-data`. From then on `run.sh` bind-mounts that volume instead of
+   the named volumes, on every deploy.
+
+To roll back, just remove the `MUSICBOT_DATA_DIR` secret and redeploy.
 
 ---
 
