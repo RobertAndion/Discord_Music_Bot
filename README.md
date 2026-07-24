@@ -79,6 +79,21 @@ docker logs -f musicbot
 
 ---
 
+## Automated Deployment (CI/CD) — Optional
+
+If you self-host on a server (e.g. a DigitalOcean droplet, any Ubuntu VPS, or a
+home server), you can have **GitHub Actions auto-deploy the bot on every push**:
+it SSHes into your server, pulls the latest code, rebuilds the Docker image, and
+restarts the container. Your Discord token and Lavalink password are stored as
+GitHub Actions secrets and written to `.env` on the server at deploy time — they
+never live in the repo.
+
+See **[deploy/README.md](deploy/README.md)** for the full step-by-step guide:
+server prep, SSH key setup, and the list of GitHub secrets to add. This is
+entirely optional — the Docker and manual setups below work fine on their own.
+
+---
+
 ## Manual Setup (No Docker)
 
 ### 1. Install Java 21+
@@ -133,7 +148,7 @@ python3 bot.py
 
 ### Lavalink password
 
-The default Lavalink password is `changeme123`. If you change it in `application.yml`, also update the `password` field in `Cogs/music.py` and `playlist.py`.
+The default Lavalink password is `changeme123`. To change it, set `LAVALINK_PASSWORD` in your `.env` — both the Lavalink server (`application.yml`) and the bot (`Cogs/music.py`) read it from that variable, so you no longer need to edit any code. If the variable is unset, both fall back to `changeme123`.
 
 ### Role configuration
 

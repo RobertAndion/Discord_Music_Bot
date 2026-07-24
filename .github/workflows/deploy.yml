@@ -1,0 +1,40 @@
+name: Deploy to DigitalOcean
+
+# Deploys on every push to master, or manually via the Actions tab.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Never run two deploys at once; cancel an in-progress one if a newer push lands.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & restart on droplet
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DROPLET_SSH_PORT || 22 }}
+          # Secrets are passed as env vars, then consumed by deploy/deploy.sh.
+          envs: DEPLOY_PATH,DEPLOY_BRANCH,DISCORD_TOKEN,LAVALINK_PASSWORD
+          script: |
+            set -euo pipefail
+            cd "${DEPLOY_PATH}"
+            echo "==> Syncing code to origin/${DEPLOY_BRANCH}"
+            git fetch --all --prune
+            git reset --hard "origin/${DEPLOY_BRANCH}"
+            git clean -fd -e .env -e Lavalink.jar
+            bash deploy/deploy.sh
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/musicbot' }}
+          DEPLOY_BRANCH: master
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          LAVALINK_PASSWORD: ${{ secrets.LAVALINK_PASSWORD }}
