@@ -23,6 +23,9 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.DROPLET_SSH_PORT || 22 }}
+          # First-time builds pull base images + download Lavalink (~100MB);
+          # default is 10m, which a small/slow droplet can exceed.
+          command_timeout: 30m
           # Secrets are passed as env vars, then consumed by deploy/deploy.sh.
           envs: DEPLOY_PATH,DEPLOY_BRANCH,DISCORD_TOKEN,LAVALINK_PASSWORD
           script: |
