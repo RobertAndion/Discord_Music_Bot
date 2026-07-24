@@ -1,5 +1,6 @@
 .git
 .env
+Lavalink.jar
 .DS_Store
 .claude/
 __pycache__/
