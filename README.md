@@ -23,7 +23,7 @@ Edit `.env` and replace `your_discord_bot_token_here` with your Discord bot toke
 
 Run from the root of the project:
 ```
-docker build -f Docker/Dockerfile -t musicbot .
+docker build -f Docker/Dockerfile -t discord-music-bot:latest .
 ```
 
 ### 3. Create persistent volumes
@@ -66,7 +66,7 @@ docker start musicbot
 ### Updating the bot
 
 1. Back up playlists from Discord with `.backupPlaylists` (the bot will DM you a zip)
-2. Rebuild the image: `docker build -f Docker/Dockerfile -t musicbot .`
+2. Rebuild the image: `docker build -f Docker/Dockerfile -t discord-music-bot:latest .`
 3. Remove the old container: `docker rm musicbot`
 4. Start fresh: `sh run.sh`
 5. Place any backed-up `.json` playlist files back into the volume if needed

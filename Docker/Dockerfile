@@ -1,5 +1,5 @@
 # ---------- BUILD STAGE ----------
-FROM python:3.13-slim-bookworm AS builder
+FROM python:3.13-slim-trixie AS builder
 
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -12,7 +12,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # ---------- RUNTIME STAGE ----------
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim-trixie
 
 RUN apt-get update && \
     apt-get upgrade -y && \
