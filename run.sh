@@ -31,7 +31,7 @@ docker run -d \
   --security-opt no-new-privileges \
   --read-only \
   --tmpfs /tmp \
-  --tmpfs /MusicBot/logs:uid=999,gid=999 \
+  --tmpfs /MusicBot/logs:uid=999,gid=999,size=48m \
   -v "${PLUGINS_MOUNT}:/MusicBot/plugins" \
   -v "${PLAYLIST_MOUNT}:/MusicBot/Playlist" \
   -v "${SONGLOG_MOUNT}:/MusicBot/SongLog" \
