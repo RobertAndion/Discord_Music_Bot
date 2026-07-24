@@ -19,6 +19,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         openjdk-21-jre-headless \
         ca-certificates \
+        curl \
         zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -27,6 +28,12 @@ WORKDIR /MusicBot
 
 COPY --from=builder /install /usr/local
 COPY . .
+
+# Download the Lavalink server jar at build time so it never lives in git.
+# Bump with: docker build --build-arg LAVALINK_VERSION=x.y.z ...
+ARG LAVALINK_VERSION=4.2.2
+RUN curl -fsSL -o Lavalink.jar \
+        "https://github.com/lavalink-devs/Lavalink/releases/download/${LAVALINK_VERSION}/Lavalink.jar"
 
 RUN mkdir -p logs plugins && \
     groupadd -g 999 basicuser && useradd -r -u 999 -g basicuser basicuser && \
