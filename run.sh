@@ -18,6 +18,11 @@ else
     SONGLOG_MOUNT="musicbot-songlogs"
 fi
 
+# Note on --tmpfs /tmp:exec — the `exec` flag is required. Lavalink/lavaplayer
+# extract native .so files (opus encoder, udp-queue, DAVE) into /tmp and mmap
+# them executable. Docker's default tmpfs is noexec, which makes those loads
+# fail with "failed to map segment from shared object" and silently breaks
+# audio playback on the read-only rootfs.
 docker run -d \
   --name musicbot \
   --restart unless-stopped \
@@ -30,7 +35,7 @@ docker run -d \
   --cap-drop=ALL \
   --security-opt no-new-privileges \
   --read-only \
-  --tmpfs /tmp \
+  --tmpfs /tmp:exec \
   --tmpfs /MusicBot/logs:uid=999,gid=999,size=48m \
   -v "${PLUGINS_MOUNT}:/MusicBot/plugins" \
   -v "${PLAYLIST_MOUNT}:/MusicBot/Playlist" \
