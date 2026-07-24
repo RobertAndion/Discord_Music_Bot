@@ -5,13 +5,10 @@ server:
     enabled: false
 
 lavalink:
-  plugins:
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
-      snapshot: false
   server:
     password: "${LAVALINK_PASSWORD:changeme123}"
     sources:
-      youtube: false  # disabled in favour of youtube-source plugin
+      youtube: false  # off: YouTube blocks datacenter IPs; we use SoundCloud instead
       bandcamp: true
       soundcloud: true
       twitch: true
@@ -41,18 +38,6 @@ lavalink:
     soundcloudSearchEnabled: true
     gc-warnings: true
 
-plugins:
-  youtube:
-    enabled: true
-    allowSearch: true
-    allowDirectVideoIds: true
-    allowDirectPlaylistIds: true
-    clients:
-      - MUSIC
-      - ANDROID_VR
-      - WEB
-      - WEBEMBEDDED
-
 metrics:
   prometheus:
     enabled: false
@@ -64,6 +49,19 @@ sentry:
 logging:
   file:
     path: ./logs/
+  # Rolling policy tuned for a tiny droplet. ./logs/ is a tmpfs (RAM) mount, so
+  # these caps bound memory use, not just disk. Archived segments are gzip-
+  # compressed automatically (Spring Boot's default file-name-pattern ends
+  # in .gz), so real coverage is far more than the raw byte caps suggest.
+  logback:
+    rollingpolicy:
+      # Roll the active (uncompressed) file at this size.
+      max-file-size: 5MB
+      # Hard ceiling on all rolled+compressed archives combined. With the
+      # active file that keeps the whole ./logs/ dir well under 50MB.
+      total-size-cap: 30MB
+      # Also prune by age so stale archives can't linger.
+      max-history: 7
   level:
     root: INFO
     lavalink: INFO
