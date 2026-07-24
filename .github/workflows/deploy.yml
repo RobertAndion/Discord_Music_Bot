@@ -15,29 +15,45 @@ jobs:
   deploy:
     name: Build & restart on droplet
     runs-on: ubuntu-latest
+    # Native ssh (below) streams the remote build output live into this log.
+    timeout-minutes: 40
     steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DROPLET_HOST }}
-          username: ${{ secrets.DROPLET_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.DROPLET_SSH_PORT || 22 }}
-          # First-time builds pull base images + download Lavalink (~100MB);
-          # default is 10m, which a small/slow droplet can exceed.
-          command_timeout: 30m
-          # Secrets are passed as env vars, then consumed by deploy/deploy.sh.
-          envs: DEPLOY_PATH,DEPLOY_BRANCH,DISCORD_TOKEN,LAVALINK_PASSWORD
-          script: |
-            set -euo pipefail
-            cd "${DEPLOY_PATH}"
-            echo "==> Syncing code to origin/${DEPLOY_BRANCH}"
-            git fetch --all --prune
-            git reset --hard "origin/${DEPLOY_BRANCH}"
-            git clean -fd -e .env -e Lavalink.jar
-            bash deploy/deploy.sh
+      - name: Deploy over SSH (streaming)
         env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_SSH_PORT: ${{ secrets.DROPLET_SSH_PORT || 22 }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/musicbot' }}
           DEPLOY_BRANCH: master
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           LAVALINK_PASSWORD: ${{ secrets.LAVALINK_PASSWORD }}
+          # Optional: absolute path to persistent data on a mounted block-storage
+          # volume (see deploy/README.md). Empty -> Docker named volumes.
+          MUSICBOT_DATA_DIR: ${{ secrets.MUSICBOT_DATA_DIR }}
+        run: |
+          set -euo pipefail
+
+          # --- Set up the SSH key and host verification ---
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$DROPLET_SSH_PORT" -H "$DROPLET_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # --- Run the deploy, streaming remote stdout/stderr live ---
+          # Secrets are passed as the remote bash's environment; the heredoc is
+          # the script it runs (quoted so it expands on the droplet, not here).
+          ssh -i ~/.ssh/deploy_key -p "$DROPLET_SSH_PORT" \
+              -o StrictHostKeyChecking=yes \
+              "$DROPLET_USER@$DROPLET_HOST" \
+              "DEPLOY_PATH='$DEPLOY_PATH' DEPLOY_BRANCH='$DEPLOY_BRANCH' \
+               DISCORD_TOKEN='$DISCORD_TOKEN' LAVALINK_PASSWORD='$LAVALINK_PASSWORD' \
+               MUSICBOT_DATA_DIR='$MUSICBOT_DATA_DIR' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+          echo "==> Syncing code to origin/$DEPLOY_BRANCH"
+          git fetch --all --prune
+          git reset --hard "origin/$DEPLOY_BRANCH"
+          git clean -fd -e .env -e Lavalink.jar
+          bash deploy/deploy.sh
+          REMOTE
