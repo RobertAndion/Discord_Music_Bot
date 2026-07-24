@@ -30,7 +30,8 @@ IMAGE_NAME="discord-music-bot"
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo latest)"
 
 echo "==> Building image (${IMAGE_NAME}:${GIT_SHA})"
-docker build -f Docker/Dockerfile \
+# --progress=plain gives line-oriented output that streams cleanly over SSH.
+docker build -f Docker/Dockerfile --progress=plain \
     -t "${IMAGE_NAME}:${GIT_SHA}" \
     -t "${IMAGE_NAME}:latest" \
     .
