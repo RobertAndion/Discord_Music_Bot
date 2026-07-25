@@ -1,16 +1,29 @@
 import os
 import re
 import random
+import logging
 import discord
 import lavalink
 from discord.ext import commands
 from lavalink.errors import ClientError
-from lavalink.events import QueueEndEvent
+from lavalink.events import QueueEndEvent, TrackExceptionEvent, TrackStuckEvent
 from lavalink.server import LoadType
 import asyncio
 import fileProcessing
 
+log = logging.getLogger(__name__)
+
 url_rx = re.compile(r'https?://(?:www\.)?.+')
+
+# Default source for plain (non-URL) searches. SoundCloud, because YouTube
+# blocks datacenter IPs. Keep this as the single source of truth so switching
+# sources later is a one-line change.
+SEARCH_PREFIX = 'scsearch:'
+
+# Transient node/network hiccups when loading a track are common; retry a few
+# times with a short backoff before giving up.
+TRACK_LOAD_RETRIES = 2
+TRACK_LOAD_BACKOFF = 0.5
 
 config = fileProcessing.read_config()
 roles = config["roles"]
@@ -144,6 +157,58 @@ class music(commands.Cog):
                 raise commands.CommandInvokeError(
                     'You need to be in my voicechannel.')
 
+    def _player_channel(self, player):
+        """The text channel a player was started from, if we still can see it."""
+        channel_id = player.fetch('channel')
+        return self.bot.get_channel(channel_id) if channel_id else None
+
+    async def _load_tracks(self, player, query):
+        """Load tracks for a query, retrying transient node/network failures.
+
+        Returns the results object (which may still have no tracks for a search
+        that genuinely found nothing) or None if every attempt raised.
+        """
+        for attempt in range(TRACK_LOAD_RETRIES + 1):
+            try:
+                return await player.node.get_tracks(query)
+            except Exception as exc:
+                log.warning(
+                    "Track load error for %r (attempt %d/%d): %s",
+                    query, attempt + 1, TRACK_LOAD_RETRIES + 1, exc)
+                if attempt < TRACK_LOAD_RETRIES:
+                    await asyncio.sleep(TRACK_LOAD_BACKOFF * (attempt + 1))
+        return None
+
+    async def _notify_skip(self, player, track, reason):
+        """Tell the channel we're skipping a track that couldn't be played."""
+        title = getattr(track, 'title', None) or 'that track'
+        log.warning("Skipping %s: %s", title, reason)
+        channel = self._player_channel(player)
+        if channel is not None:
+            try:
+                await channel.send(
+                    f"⚠️ Couldn't play **{title}** ({reason}). Skipping.")
+            except discord.HTTPException:
+                pass
+
+    @lavalink.listener(TrackExceptionEvent)
+    async def on_track_exception(self, event: TrackExceptionEvent):
+        # A track failed to stream (e.g. a SoundCloud 404). Lavalink ends it
+        # with LOAD_FAILED and auto-advances to the next queued track, so we
+        # only need to let the users know why it was skipped.
+        await self._notify_skip(
+            event.player, event.track,
+            getattr(event, 'message', None) or 'source error')
+
+    @lavalink.listener(TrackStuckEvent)
+    async def on_track_stuck(self, event: TrackStuckEvent):
+        # Stuck tracks don't auto-advance, so skip past them ourselves.
+        await self._notify_skip(event.player, event.track, 'stalled')
+        try:
+            await event.player.skip()
+        except Exception as exc:
+            log.warning("Failed to skip stuck track: %s", exc)
+
     @lavalink.listener(QueueEndEvent)
     async def on_queue_end(self, event: QueueEndEvent):
         guild_id = event.player.guild_id
@@ -157,14 +222,20 @@ class music(commands.Cog):
     async def play_song(self, ctx, *, query: str):
         fileProcessing.logUpdate(ctx, query)
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        # Keep the channel current so skip/failure notices land where the user
+        # is actually talking, even across reconnects.
+        player.store('channel', ctx.channel.id)
         query = query.strip('<>')
 
         if not url_rx.match(query):
-            query = f'scsearch:{query}'
+            query = f'{SEARCH_PREFIX}{query}'
 
-        results = await player.node.get_tracks(query)
+        results = await self._load_tracks(player, query)
 
-        if not results or not results.tracks:
+        if results is None:
+            return await ctx.send("The music server isn't responding right now — try again in a moment.")
+
+        if not results.tracks:
             return await ctx.send('Nothing found!')
 
         embed = discord.Embed(color=discord.Color.blurple())
@@ -202,19 +273,20 @@ class music(commands.Cog):
         songlist.pop(0)
 
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        skipped = 0
         for song in songlist:
-            try:
-                query = f'scsearch:{song}'
-                results = await player.node.get_tracks(query)
-                if not results or not results.tracks:
-                    continue
-                track = results.tracks[0]
-                track.extra["requester"] = ctx.author.id
-                player.add(track=track)
-            except Exception as error:
-                print(error)
+            results = await self._load_tracks(player, f'{SEARCH_PREFIX}{song}')
+            if results is None or not results.tracks:
+                skipped += 1
+                continue
+            track = results.tracks[0]
+            track.extra["requester"] = ctx.author.id
+            player.add(track=track)
 
-        await ctx.send(str(playlist_name) + " loaded successfully.")
+        message = f"{playlist_name} loaded successfully."
+        if skipped:
+            message += f" ({skipped} song(s) couldn't be found and were skipped.)"
+        await ctx.send(message)
 
         if not player.is_playing:
             await player.play()
