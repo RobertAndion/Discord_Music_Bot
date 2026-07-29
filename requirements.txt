@@ -2,3 +2,10 @@ discord.py~=2.4
 lavalink>=5.0,<6.0
 python-dotenv~=1.0
 psutil~=6.0
+
+# Testing dependencies
+pytest~=7.4
+pytest-asyncio~=0.21
+pytest-cov~=4.1
+pytest-mock~=3.11
+flake8~=7.1
