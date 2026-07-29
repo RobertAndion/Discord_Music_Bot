@@ -1,5 +1,20 @@
 # Testing Guide
 
+## Pre-push Hook (Recommended)
+
+This repo ships a tracked pre-push hook at `.githooks/pre-push` that runs the
+same lint (flake8) and pytest checks as CI's "Run Tests & Code Quality
+Checks" job, before `git push` leaves your machine. It's free to run locally
+and catches failures without spending GitHub Actions minutes.
+
+Enable it once per clone:
+```bash
+git config core.hooksPath .githooks
+```
+
+If a check fails, the push is blocked — fix the issue (or `git push
+--no-verify` to bypass in a pinch) and push again.
+
 ## Running Tests
 
 ### Run all tests:
