@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Mirrors the GitHub Actions "Run Tests & Code Quality Checks" job so the same
+# lint/test failures get caught locally (free) instead of on GitHub (limited
+# Actions minutes). Enable with: git config core.hooksPath .githooks
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+if ! python3 -c "import flake8" 2>/dev/null || ! python3 -c "import pytest" 2>/dev/null; then
+    echo "pre-push: flake8/pytest not installed — run: pip install -r requirements.txt" >&2
+    exit 1
+fi
+
+echo "pre-push: flake8 (syntax / undefined-name check)"
+python3 -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+echo "pre-push: pytest"
+python3 -m pytest tests/ --tb=short
+
+echo "pre-push: all checks passed"
