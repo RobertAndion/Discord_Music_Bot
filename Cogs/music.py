@@ -19,8 +19,10 @@ log = logging.getLogger(__name__)
 
 url_rx = re.compile(r'https?://(?:www\.)?.+')
 
-# Enhanced search configuration with fallbacks (no ytsearch - datacenter IP blocks)
-SEARCH_SOURCES = ['scsearch:', 'bandcamp:', 'http:']
+# Enhanced search configuration with fallbacks (no ytsearch - datacenter IP blocks).
+# 'http:' is deliberately excluded - it's a direct-stream-URL loader in
+# Lavalink, not a text-search source, so it can never resolve a plain query.
+SEARCH_SOURCES = ['scsearch:', 'bandcamp:']
 PRIMARY_SEARCH_PREFIX = 'scsearch:'
 
 # Exponential backoff retry configuration
@@ -121,13 +123,13 @@ class CircuitBreaker:
 
     def record_failure(self, source: str):
         self.failures[source] = self.failures.get(source, 0) + 1
-        self.last_failure[source] = asyncio.get_event_loop().time()
+        self.last_failure[source] = time.monotonic()
 
     def is_available(self, source: str) -> bool:
         if self.failures.get(source, 0) < CIRCUIT_BREAKER_THRESHOLD:
             return True
         last_fail = self.last_failure.get(source, 0)
-        current_time = asyncio.get_event_loop().time()
+        current_time = time.monotonic()
         return (current_time - last_fail) > CIRCUIT_BREAKER_TIMEOUT
 
 
@@ -345,16 +347,35 @@ class music(commands.Cog):
         channel_id = player.fetch('channel')
         return self.bot.get_channel(channel_id) if channel_id else None
 
-    async def _load_tracks(self, player, query, use_fallbacks=True):
+    async def _notify_still_searching(self, ctx, state, label):
+        """Send a one-time 'still working on it' notice once a retry actually happens.
+
+        The fast/happy path (first attempt succeeds) never triggers this, so it
+        only shows up once the search is genuinely taking a while.
+        """
+        if ctx is None or state['sent']:
+            return
+        state['sent'] = True
+        try:
+            await ctx.send(f"⏳ Still searching ({label})... hang tight, this can take a bit.")
+        except discord.HTTPException:
+            pass
+
+    async def _load_tracks(self, player, query, use_fallbacks=True, ctx=None):
         """Load tracks with enhanced retry logic and fallback sources.
 
         Args:
             player: Lavalink player
             query: Search query or URL
             use_fallbacks: Whether to try alternative sources if primary fails
+            ctx: Optional command context. If given, a one-time "still
+                searching" message is sent the first time a retry/fallback
+                actually kicks in, so long waits aren't silent.
 
         Returns results object or None if all attempts fail.
         """
+        notify_state = {'sent': False}
+
         # Check if this is a direct URL - if so, don't use search prefixes
         is_url = bool(url_rx.match(query))
 
@@ -376,6 +397,7 @@ class music(commands.Cog):
                         query, attempt + 1, MAX_RETRIES, exc)
 
                     if attempt < MAX_RETRIES - 1:
+                        await self._notify_still_searching(ctx, notify_state, "that link")
                         backoff = min(INITIAL_BACKOFF * (2 ** attempt), MAX_BACKOFF)
                         await asyncio.sleep(backoff)
             return None
@@ -431,6 +453,7 @@ class music(commands.Cog):
 
                     # Exponential backoff
                     if attempt < MAX_RETRIES - 1:
+                        await self._notify_still_searching(ctx, notify_state, f"`{source}`")
                         backoff = min(INITIAL_BACKOFF * (2 ** attempt), MAX_BACKOFF)
                         await asyncio.sleep(backoff)
                     else:
@@ -510,7 +533,7 @@ class music(commands.Cog):
         if not url_rx.match(sanitized_query):
             sanitized_query = f'{PRIMARY_SEARCH_PREFIX}{sanitized_query}'
 
-        results = await self._load_tracks(player, sanitized_query, use_fallbacks=True)
+        results = await self._load_tracks(player, sanitized_query, use_fallbacks=True, ctx=ctx)
 
         if results is None:
             return await ctx.send("❌ The music server isn't responding right now — try again in a moment.")
@@ -558,7 +581,7 @@ class music(commands.Cog):
         player.store('channel', ctx.channel.id)
 
         search_query = f'{PRIMARY_SEARCH_PREFIX}{sanitized_query}'
-        results = await self._load_tracks(player, search_query, use_fallbacks=False)
+        results = await self._load_tracks(player, search_query, use_fallbacks=False, ctx=ctx)
 
         if not results or not results.tracks:
             return await ctx.send('🔍 No results found!')
@@ -574,11 +597,19 @@ class music(commands.Cog):
 
         search_msg = await ctx.send(embed=embed)
 
-        # Wait for user response
+        def _is_valid_choice(m):
+            if m.author != ctx.author or m.channel != ctx.channel:
+                return False
+            content = m.content.strip().lower()
+            return content == 'cancel' or content.isdigit()
+
+        # Wait for user response. Only messages that look like an actual
+        # answer (a number or "cancel") count, so unrelated chat from the
+        # same user in the same channel doesn't get consumed as a reply.
         try:
             response = await self.bot.wait_for(
                 'message',
-                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                check=_is_valid_choice,
                 timeout=30.0
             )
 
@@ -728,8 +759,10 @@ class music(commands.Cog):
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         skipped = 0
 
-        # Load first song
-        results = await self._load_tracks(player, f'{PRIMARY_SEARCH_PREFIX}{songlist[0]}')
+        # Load first song (only this one gets a "still searching" notice —
+        # the rest of the playlist loads quietly so a big list doesn't spam
+        # the channel, and ends with a single summary message either way)
+        results = await self._load_tracks(player, f'{PRIMARY_SEARCH_PREFIX}{songlist[0]}', ctx=ctx)
         if results and results.tracks:
             track = results.tracks[0]
             track.extra["requester"] = ctx.author.id
