@@ -197,6 +197,11 @@ This is also the command to continue adding songs to the queue, it covers both f
 when the end of the queue is reached.
 
 ```
+.search <QUERY>
+```
+🔍 **NEW**: Search for songs and choose from 5 interactive results. Shows duration and lets you pick the exact track you want.
+
+```
 .skip <OPTIONAL amount>
 ```
 If the bot is playing a song it will skip to the next song as long as the person is in the same
@@ -204,10 +209,10 @@ voice channel as the bot. If there are no songs after the bot will automatically
 The argument can be used to say how many songs to skip.
 
 ```
-.clear
+.stop (clear)
 ```
-This will clear all songs including now playing and the queue. This is the best way to disconnect the bot,
-because it flushes everything first.
+🆕 **IMPROVED**: This will clear all songs including now playing and the queue and disconnect the bot.
+Now available as both `.stop` and `.clear` (legacy alias).
 
 ```
 .pause (ps)
@@ -218,10 +223,19 @@ manually under the pause command. Change the sleep(number of seconds here) to an
 Other commands can still be used including unpause during this "wait" period.
 
 ```
-.unpause (resume,start,up)
+.resume (unpause,start,up)
 ```
-This will unpause a currently paused bot. (Should come after a pause command)
-This will automatically happen after 7 minutes after a pause command by default.
+🆕 **IMPROVED**: This will unpause a currently paused bot. Now named `.resume` for better clarity (alias `.unpause` still works).
+
+```
+.loop [mode]
+```
+🔧 **NEW**: Enable looping - `song` to loop current track, `queue` to loop entire queue, `disable` to turn off looping.
+
+```
+.volume <0-200>
+```
+🔧 **NEW**: Set volume for this server (0-200%, default 100%). Each server has its own volume setting.
 
 ```
 .queue <OPTIONAL page number> (playlist,songlist,upnext)
@@ -239,11 +253,16 @@ Shuffles all currently queued songs.
 Custom implementation — shuffles in a finalized form viewable in the queue command.
 
 ```
-.removequeue <position number> (rq)
+.remove <position number> (rq)
 ```
-Removes a specific song from the queue by its position number.
+🆕 **IMPROVED**: Removes a specific song from the queue by its position number (shorter command name).
 The position number matches the numbering shown by the `.queue` command (1 = first song after the currently playing track).
 Has no effect on the currently playing song.
+
+```
+.history <OPTIONAL limit>
+```
+🔧 **NEW**: Show play history for this server (default 10 songs, max 50). History is server-specific and accumulates over time.
 
 ## PLAYLIST COMMANDS:
 ### NOTE:
