@@ -98,8 +98,23 @@ class TestRetryLogic:
     @pytest.mark.asyncio
     async def test_load_tracks_with_retry(self):
         """Test that retry logic works for transient failures"""
-        # This would require mocking the Lavalink node
-        pass
+        from Cogs.music import CircuitBreaker, SEARCH_SOURCES
+
+        cb = CircuitBreaker()
+
+        # Test that circuit breaker starts with all sources available
+        for source in SEARCH_SOURCES:
+            assert cb.is_available(source) == True
+
+        # Test that repeated failures trip the circuit breaker
+        for _ in range(3):  # CIRCUIT_BREAKER_THRESHOLD
+            cb.record_failure('scsearch:')
+
+        assert cb.is_available('scsearch:') == False
+
+        # Test that success resets the circuit breaker
+        cb.record_success('scsearch:')
+        assert cb.is_available('scsearch:') == True
 
 
 class TestVolumeControl:
@@ -107,11 +122,85 @@ class TestVolumeControl:
 
     def test_volume_validation(self):
         """Test that volume is validated correctly"""
+        from Cogs.music import MAX_QUERY_LENGTH, MIN_QUERY_LENGTH
+
+        # Test constants are properly defined
+        assert MAX_QUERY_LENGTH == 500
+        assert MIN_QUERY_LENGTH == 2
+
         # Valid ranges
         for volume in [0, 50, 100, 150, 200]:
             assert 0 <= volume <= 200
 
         # Invalid ranges would be caught in the command
+
+
+class TestInputSanitization:
+    """Test input sanitization for security"""
+
+    def test_sanitize_valid_input(self):
+        """Test that valid input passes through sanitization"""
+        from Cogs.music import sanitize_query
+
+        # Normal search queries should work
+        assert sanitize_query("lofi hip hop") == "lofi hip hop"
+        assert sanitize_query("Test Song Name") == "Test Song Name"
+        assert sanitize_query("song with numbers 123") == "song with numbers 123"
+
+    def test_sanitize_dangerous_chars(self):
+        """Test that dangerous characters are removed"""
+        from Cogs.music import sanitize_query
+
+        # Test removal of null bytes and newlines
+        assert sanitize_query("song\x00name") == "songname"
+        assert sanitize_query("song\nname") == "songname"
+        assert sanitize_query("song\tname") == "songname"
+
+        # Test removal of angle brackets
+        assert sanitize_query("<song>name</>") == "songname"
+
+    def test_sanitize_whitespace(self):
+        """Test that excessive whitespace is cleaned up"""
+        from Cogs.music import sanitize_query
+
+        # Multiple spaces collapsed to single space
+        assert sanitize_query("song    name") == "song name"
+        # Leading/trailing whitespace removed
+        assert sanitize_query("  song name  ") == "song name"
+
+    def test_sanitize_length_validation(self):
+        """Test that length limits are enforced"""
+        from Cogs.music import sanitize_query, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH
+
+        # Test minimum length
+        with pytest.raises(ValueError, match="at least 2 characters"):
+            sanitize_query("a")
+
+        # Test maximum length
+        long_query = "a" * (MAX_QUERY_LENGTH + 1)
+        with pytest.raises(ValueError, match="less than 500 characters"):
+            sanitize_query(long_query)
+
+    def test_sanitize_input_type(self):
+        """Test that only string input is accepted"""
+        from Cogs.music import sanitize_query
+
+        # Test non-string input raises error
+        with pytest.raises(ValueError, match="must be a string"):
+            sanitize_query(123)
+
+        with pytest.raises(ValueError, match="must be a string"):
+            sanitize_query(None)
+
+    def test_sanitize_preserves_urls(self):
+        """Test that URLs are preserved during sanitization"""
+        from Cogs.music import sanitize_query
+
+        url = "https://soundcloud.com/artist/track"
+        assert sanitize_query(url) == url
+
+        url_with_params = "https://example.com/track?param=value&other=123"
+        assert sanitize_query(url_with_params) == url_with_params
 
 
 class TestQueueManagement:
@@ -177,15 +266,59 @@ class TestIntegrationScenarios:
     """Integration tests for common workflows"""
 
     @pytest.mark.asyncio
-    async def test_play_skip_workflow(self):
+    async def test_play_skip_workflow(self, mock_bot, mock_ctx, mock_player):
         """Test the basic play and skip workflow"""
-        # This would test the full flow of playing and skipping songs
-        pass
+        from Cogs.music import music
+        from unittest.mock import patch, MagicMock
+
+        # Setup
+        cog = music(mock_bot)
+        mock_bot.lavalink.player_manager.get.return_value = mock_player
+
+        # Mock successful track load
+        mock_results = MagicMock()
+        mock_results.load_type = LoadType.TRACK
+        mock_results.tracks = [MagicMock(title="Test Song", uri="http://test.com")]
+
+        with patch.object(cog, '_load_tracks', return_value=mock_results):
+            # Test play command
+            await cog.play_song(mock_ctx, "test song")
+
+            # Verify track was added and played
+            mock_player.add.assert_called_once()
+            mock_player.play.assert_called_once()
+
+        # Test skip command
+        mock_player.is_playing = True
+        await cog.skip_song(mock_ctx, 1)
+
+        # Verify skip was called
+        mock_player.skip.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_playlist_playback_workflow(self):
+    async def test_playlist_playback_workflow(self, mock_bot, mock_ctx, mock_player):
         """Test playlist creation and playback"""
-        pass
+        from Cogs.music import music
+        from unittest.mock import patch, MagicMock
+
+        # Setup
+        cog = music(mock_bot)
+        mock_bot.lavalink.player_manager.get.return_value = mock_player
+
+        # Mock playlist load
+        mock_results = MagicMock()
+        mock_results.load_type = LoadType.PLAYLIST
+        mock_results.playlist_info.name = "Test Playlist"
+        mock_results.tracks = [
+            MagicMock(title=f"Song {i}", uri=f"http://test.com/{i}") for i in range(3)
+        ]
+
+        with patch.object(cog, '_load_tracks', return_value=mock_results):
+            # Test playlist playback
+            await cog.play_from_list(mock_ctx, "test_playlist")
+
+            # Verify all tracks were added
+            assert mock_player.add.call_count == 3
 
 
 if __name__ == "__main__":
