@@ -1,6 +1,7 @@
 import os
 import re
 import random
+import time
 import logging
 import json
 import discord
@@ -11,9 +12,7 @@ from lavalink.events import QueueEndEvent, TrackExceptionEvent, TrackStuckEvent
 from lavalink.server import LoadType
 import asyncio
 import fileProcessing
-from typing import Optional, List, Dict
-from dataclasses import dataclass
-from enum import Enum
+from typing import List, Dict
 
 log = logging.getLogger(__name__)
 
@@ -40,11 +39,6 @@ config = fileProcessing.read_config()
 roles = config["roles"]
 voice_permissions_check_list = config["voice_permission_check_list"]
 lavalink_password = os.getenv('LAVALINK_PASSWORD', 'changeme123')
-
-class SearchSource(Enum):
-    SOUNDCLOUD = 'scsearch:'
-    BANDCAMP = 'bandcamp:'
-    HTTP = 'http:'
 
 @dataclass
 class ServerData:
@@ -105,47 +99,65 @@ class ServerDataManager:
         server_data = self.get_server_data(guild_id)
         volume_data = {}
         if os.path.exists(server_data.get_volume_path()):
-            with open(server_data.get_volume_path(), 'r') as f:
-                volume_data = json.load(f)
+            try:
+                with open(server_data.get_volume_path(), 'r') as f:
+                    volume_data = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                volume_data = {}
         volume_data[str(guild_id)] = volume
-        with open(server_data.get_volume_path(), 'w') as f:
-            json.dump(volume_data, f, indent=2)
+        try:
+            with open(server_data.get_volume_path(), 'w') as f:
+                json.dump(volume_data, f, indent=2)
+        except IOError:
+            log.error("Failed to save volume for guild %s", guild_id)
 
     def load_volume(self, guild_id: int) -> int:
         server_data = self.get_server_data(guild_id)
         if os.path.exists(server_data.get_volume_path()):
-            with open(server_data.get_volume_path(), 'r') as f:
-                volume_data = json.load(f)
-                return volume_data.get(str(guild_id), 100)  # Default 100%
+            try:
+                with open(server_data.get_volume_path(), 'r') as f:
+                    volume_data = json.load(f)
+                    return volume_data.get(str(guild_id), 100)
+            except (json.JSONDecodeError, IOError):
+                log.error("Failed to load volume for guild %s", guild_id)
         return 100
 
     def add_to_history(self, guild_id: int, user_id: int, track_title: str, track_url: str):
         server_data = self.get_server_data(guild_id)
         history = []
         if os.path.exists(server_data.get_history_path()):
-            with open(server_data.get_history_path(), 'r') as f:
-                history = json.load(f)
+            try:
+                with open(server_data.get_history_path(), 'r') as f:
+                    history = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                history = []
 
-        # Add new entry (max 100 per server)
+        # Add new entry (max 100 per server) - use wall-clock time
         history.insert(0, {
             'title': track_title,
             'url': track_url,
             'user_id': user_id,
-            'timestamp': asyncio.get_event_loop().time()
+            'timestamp': time.time()  # Wall-clock time, not monotonic
         })
 
         # Keep only last 100 entries
         history = history[:100]
 
-        with open(server_data.get_history_path(), 'w') as f:
-            json.dump(history, f, indent=2)
+        try:
+            with open(server_data.get_history_path(), 'w') as f:
+                json.dump(history, f, indent=2)
+        except IOError:
+            log.error("Failed to write history for guild %s", guild_id)
 
     def get_history(self, guild_id: int, limit: int = 10) -> List[Dict]:
         server_data = self.get_server_data(guild_id)
         if os.path.exists(server_data.get_history_path()):
-            with open(server_data.get_history_path(), 'r') as f:
-                history = json.load(f)
-                return history[:limit]
+            try:
+                with open(server_data.get_history_path(), 'r') as f:
+                    history = json.load(f)
+                    return history[:limit]
+            except (json.JSONDecodeError, IOError):
+                log.error("Failed to read history for guild %s", guild_id)
         return []
 
 class LavalinkVoiceClient(discord.VoiceProtocol):
@@ -291,6 +303,31 @@ class music(commands.Cog):
 
         Returns results object or None if all attempts fail.
         """
+        # Check if this is a direct URL - if so, don't use search prefixes
+        is_url = bool(url_rx.match(query))
+
+        if is_url:
+            # Direct URL - no search prefixes, just retry logic
+            for attempt in range(MAX_RETRIES):
+                try:
+                    results = await player.node.get_tracks(query)
+                    if results and results.tracks:
+                        return results
+                    elif results and not results.tracks:
+                        return None  # URL returned no results
+                    else:
+                        raise Exception("No results returned from Lavalink")
+
+                except Exception as exc:
+                    log.warning(
+                        "URL load error for %r (attempt %d/%d): %s",
+                        query, attempt + 1, MAX_RETRIES, exc)
+
+                    if attempt < MAX_RETRIES - 1:
+                        backoff = min(INITIAL_BACKOFF * (2 ** attempt), MAX_BACKOFF)
+                        await asyncio.sleep(backoff)
+            return None
+
         # Extract search source if present
         search_source = None
         base_query = query
@@ -300,23 +337,26 @@ class music(commands.Cog):
                 base_query = query[len(source):]
                 break
 
-        # If no source specified, start with SoundCloud
+        # Build list of sources to try - always use fallbacks for searches
         sources_to_try = []
-        if search_source:
+        if search_source and not use_fallbacks:
             sources_to_try = [search_source]
+        elif search_source:
+            # If source specified but fallbacks enabled, include all sources starting with specified
+            sources_to_try = [search_source] + [s for s in SEARCH_SOURCES if s != search_source]
         elif use_fallbacks:
             sources_to_try = SEARCH_SOURCES.copy()
         else:
             sources_to_try = [PRIMARY_SEARCH_PREFIX]
 
         # Try each source with exponential backoff
-        for source_idx, source in enumerate(sources_to_try):
+        for source in sources_to_try:
             # Check circuit breaker
             if not self.server_manager.circuit_breaker.is_available(source):
                 log.warning("Source %s is circuit-breaked, skipping", source)
                 continue
 
-            full_query = f"{source}{base_query}" if source else base_query
+            full_query = f"{source}{base_query}"
 
             for attempt in range(MAX_RETRIES):
                 try:
@@ -410,10 +450,11 @@ class music(commands.Cog):
         player.store('channel', ctx.channel.id)
         query = query.strip('<>')
 
+        # Don't prepend search prefix to URLs - let _load_tracks handle them
         if not url_rx.match(query):
             query = f'{PRIMARY_SEARCH_PREFIX}{query}'
 
-        results = await self._load_tracks(player, query)
+        results = await self._load_tracks(player, query, use_fallbacks=True)
 
         if results is None:
             return await ctx.send("❌ The music server isn't responding right now — try again in a moment.")
@@ -514,6 +555,11 @@ class music(commands.Cog):
             return await ctx.send('❌ Volume must be between 0 and 200.')
 
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+
+        # Safety check - ensure bot is connected
+        if not ctx.voice_client:
+            return await ctx.send('❌ Bot is not connected to voice.')
+
         await player.set_volume(volume)
         self.server_manager.save_volume(ctx.guild.id, volume)
 
@@ -554,13 +600,14 @@ class music(commands.Cog):
 
         embed = discord.Embed(color=discord.Color.blurple())
         embed.title = f'📜 Play History (Last {len(history)} tracks)'
+        embed.description = ""  # Initialize to prevent TypeError
 
         for i, entry in enumerate(history, 1):
             embed.description += f"`{i}.` **{entry['title']}**\n"
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='resume', aliases=['unpause'], description="Resume paused playback")
+    @commands.command(name='resume', aliases=['unpause', 'start', 'up'], description="Resume paused playback")
     @commands.has_any_role(*roles)
     async def unpause_bot(self, ctx):
         """Resume playback with clearer name"""
@@ -589,7 +636,7 @@ class music(commands.Cog):
         await ctx.voice_client.disconnect(force=True)
         await ctx.send('⏹️ Playback stopped and bot disconnected.')
 
-    @commands.command(name='remove', description="Remove song from queue by position")
+    @commands.command(name='remove', aliases=['rq'], description="Remove song from queue by position")
     @commands.has_any_role(*roles)
     async def remove_from_queue(self, ctx, position: int):
         """Remove song from queue (shorter command name)"""
@@ -712,6 +759,68 @@ class music(commands.Cog):
                     await ctx.send("Automatically unpaused.")
         finally:
             self._auto_unpause_guilds.discard(ctx.guild.id)
+
+    @commands.command(name='queue', aliases=['playlist', 'songlist', 'upnext'], description="Shows songs up next in order")
+    @commands.has_any_role(*roles)
+    async def queue(self, ctx, page=1):
+        """Show queue with improved formatting"""
+        if not isinstance(page, int):
+            raise commands.CommandInvokeError("Please enter a valid number.")
+
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        if not player.is_playing:
+            return await ctx.send("📭 Nothing is queued.")
+
+        songlist = player.queue
+        list_collection = []
+        complete_list = ''
+
+        # Add currently playing track
+        current = player.current
+        loop_mode = self.loop_modes.get(ctx.guild.id, 'none')
+        loop_indicator = "🔁 " if loop_mode == 'song' else ("🔁 " if loop_mode == 'queue' else "")
+
+        complete_list = f"{loop_indicator}**NP:** {current.title}\n"
+
+        i = 0
+        for song in songlist:
+            complete_list += f"`{i + 1}.` {song.title}\n"
+            i += 1
+            if i % 10 == 0:
+                list_collection.append(complete_list)
+                complete_list = ''
+
+        if i % 10 != 0 or i == 0:
+            list_collection.append(complete_list)
+
+        selection = int(page - 1)
+        embed = discord.Embed(color=discord.Color.blurple())
+        embed.title = f'🎵 Queue ({len(songlist)} songs)'
+
+        if selection < 0:
+            list_collection[0] += f"\nPage: 1/{len(list_collection)}"
+            embed.description = list_collection[0]
+        elif selection > len(list_collection) - 1:
+            list_collection[len(list_collection) - 1] += f"\nPage: {len(list_collection)}/{len(list_collection)}"
+            embed.description = list_collection[len(list_collection) - 1]
+        else:
+            list_collection[selection] += f"\nPage: {page}/{len(list_collection)}"
+            embed.description = list_collection[selection]
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name="shuffle", description="Shuffles the current queue")
+    @commands.has_any_role(*roles)
+    async def shuffle(self, ctx):
+        """Shuffle queue with better feedback"""
+        player = self.bot.lavalink.player_manager.get(ctx.guild.id)
+        if not player or not player.is_playing:
+            return await ctx.send("❌ Nothing playing to shuffle.")
+        if not player.queue:
+            return await ctx.send("❌ Nothing queued to shuffle.")
+
+        random.shuffle(player.queue)
+        await ctx.send("🔀 Queue shuffled.")
 
 
 async def setup(bot):
