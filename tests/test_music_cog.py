@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import Mock, AsyncMock, patch
 import discord
 from discord.ext import commands
+from lavalink.server import LoadType
 
 
 # Mock fixtures
@@ -156,8 +157,8 @@ class TestInputSanitization:
         assert sanitize_query("song\nname") == "songname"
         assert sanitize_query("song\tname") == "songname"
 
-        # Test removal of angle brackets
-        assert sanitize_query("<song>name</>") == "songname"
+        # Test removal of angle brackets ('/' is preserved — needed for URLs)
+        assert sanitize_query("<song>name</>") == "songname/"
 
     def test_sanitize_whitespace(self):
         """Test that excessive whitespace is cleaned up"""
@@ -282,7 +283,7 @@ class TestIntegrationScenarios:
 
         with patch.object(cog, '_load_tracks', return_value=mock_results):
             # Test play command
-            await cog.play_song(mock_ctx, "test song")
+            await cog.play_song.callback(cog, mock_ctx, query="test song")
 
             # Verify track was added and played
             mock_player.add.assert_called_once()
@@ -290,7 +291,7 @@ class TestIntegrationScenarios:
 
         # Test skip command
         mock_player.is_playing = True
-        await cog.skip_song(mock_ctx, 1)
+        await cog.skip_song.callback(cog, mock_ctx, 1)
 
         # Verify skip was called
         mock_player.skip.assert_called_once()
@@ -313,9 +314,11 @@ class TestIntegrationScenarios:
             MagicMock(title=f"Song {i}", uri=f"http://test.com/{i}") for i in range(3)
         ]
 
-        with patch.object(cog, '_load_tracks', return_value=mock_results):
+        with patch.object(cog, '_load_tracks', return_value=mock_results), \
+                patch('Cogs.music.fileProcessing.play_playlist',
+                      return_value=["Song 0", "Song 1", "Song 2"]):
             # Test playlist playback
-            await cog.play_from_list(mock_ctx, "test_playlist")
+            await cog.play_from_list.callback(cog, mock_ctx, playlist_name="test_playlist")
 
             # Verify all tracks were added
             assert mock_player.add.call_count == 3

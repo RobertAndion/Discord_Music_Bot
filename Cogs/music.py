@@ -72,6 +72,15 @@ def sanitize_query(query: str) -> str:
     # Remove angle brackets (often used in Discord mentions/URLs)
     query = query.strip('<>')
 
+    # Remove potentially dangerous characters that could cause injection.
+    # Must happen before whitespace collapsing below, since \n/\r/\t are
+    # themselves whitespace and would otherwise get turned into a literal
+    # space instead of being dropped.
+    # Allow: alphanumeric, spaces, basic punctuation, common URL characters
+    dangerous_chars = ['<', '>', '\x00', '\n', '\r', '\t']
+    for char in dangerous_chars:
+        query = query.replace(char, '')
+
     # Remove excessive whitespace
     query = ' '.join(query.split())
 
@@ -80,12 +89,6 @@ def sanitize_query(query: str) -> str:
         raise ValueError(f"Query must be at least {MIN_QUERY_LENGTH} characters")
     if len(query) > MAX_QUERY_LENGTH:
         raise ValueError(f"Query must be less than {MAX_QUERY_LENGTH} characters")
-
-    # Remove potentially dangerous characters that could cause injection
-    # Allow: alphanumeric, spaces, basic punctuation, common URL characters
-    dangerous_chars = ['<', '>', '\x00', '\n', '\r', '\t']
-    for char in dangerous_chars:
-        query = query.replace(char, '')
 
     return query
 
