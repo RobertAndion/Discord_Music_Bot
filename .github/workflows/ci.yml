@@ -49,7 +49,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --tb=short || true
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --tb=short
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
