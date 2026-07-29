@@ -13,6 +13,7 @@ from lavalink.server import LoadType
 import asyncio
 import fileProcessing
 from typing import List, Dict
+from dataclasses import dataclass
 
 log = logging.getLogger(__name__)
 
@@ -23,9 +24,16 @@ SEARCH_SOURCES = ['scsearch:', 'bandcamp:', 'http:']
 PRIMARY_SEARCH_PREFIX = 'scsearch:'
 
 # Exponential backoff retry configuration
+# MAX_RETRIES: 5 attempts balance between persistence and not wasting resources on persistent failures
+# INITIAL_BACKOFF: Start with 1 second delay to avoid overwhelming struggling services
+# MAX_BACKOFF: Cap at 10 seconds to prevent excessive wait times for users
 MAX_RETRIES = 5
 INITIAL_BACKOFF = 1.0
 MAX_BACKOFF = 10.0
+
+# Circuit breaker configuration
+# CIRCUIT_BREAKER_THRESHOLD: 3 consecutive failures before tripping - balances tolerance vs. quick failover
+# CIRCUIT_BREAKER_TIMEOUT: 60 seconds recovery time - allows transient issues to resolve while maintaining responsiveness
 CIRCUIT_BREAKER_THRESHOLD = 3
 CIRCUIT_BREAKER_TIMEOUT = 60
 
@@ -39,6 +47,47 @@ config = fileProcessing.read_config()
 roles = config["roles"]
 voice_permissions_check_list = config["voice_permission_check_list"]
 lavalink_password = os.getenv('LAVALINK_PASSWORD', 'changeme123')
+
+# Input validation limits
+# MAX_QUERY_LENGTH: 500 characters - prevents abuse while allowing full song titles and artist names
+# MIN_QUERY_LENGTH: 2 characters - prevents empty or meaningless searches
+MAX_QUERY_LENGTH = 500
+MIN_QUERY_LENGTH = 2
+
+def sanitize_query(query: str) -> str:
+    """Sanitize user input to prevent injection attacks and abuse
+
+    Args:
+        query: Raw user input string
+
+    Returns:
+        Sanitized query string safe for use with external APIs
+
+    Raises:
+        ValueError: If query fails validation checks
+    """
+    if not isinstance(query, str):
+        raise ValueError("Query must be a string")
+
+    # Remove angle brackets (often used in Discord mentions/URLs)
+    query = query.strip('<>')
+
+    # Remove excessive whitespace
+    query = ' '.join(query.split())
+
+    # Check length limits
+    if len(query) < MIN_QUERY_LENGTH:
+        raise ValueError(f"Query must be at least {MIN_QUERY_LENGTH} characters")
+    if len(query) > MAX_QUERY_LENGTH:
+        raise ValueError(f"Query must be less than {MAX_QUERY_LENGTH} characters")
+
+    # Remove potentially dangerous characters that could cause injection
+    # Allow: alphanumeric, spaces, basic punctuation, common URL characters
+    dangerous_chars = ['<', '>', '\x00', '\n', '\r', '\t']
+    for char in dangerous_chars:
+        query = query.replace(char, '')
+
+    return query
 
 @dataclass
 class ServerData:
@@ -445,16 +494,20 @@ class music(commands.Cog):
     @commands.has_any_role(*roles)
     async def play_song(self, ctx, *, query: str):
         """Play a song with enhanced retry logic and fallbacks"""
-        fileProcessing.logUpdate(ctx, query)
+        try:
+            sanitized_query = sanitize_query(query)
+        except ValueError as e:
+            return await ctx.send(f'❌ Invalid query: {str(e)}')
+
+        fileProcessing.logUpdate(ctx, sanitized_query)
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         player.store('channel', ctx.channel.id)
-        query = query.strip('<>')
 
         # Don't prepend search prefix to URLs - let _load_tracks handle them
-        if not url_rx.match(query):
-            query = f'{PRIMARY_SEARCH_PREFIX}{query}'
+        if not url_rx.match(sanitized_query):
+            sanitized_query = f'{PRIMARY_SEARCH_PREFIX}{sanitized_query}'
 
-        results = await self._load_tracks(player, query, use_fallbacks=True)
+        results = await self._load_tracks(player, sanitized_query, use_fallbacks=True)
 
         if results is None:
             return await ctx.send("❌ The music server isn't responding right now — try again in a moment.")
@@ -493,10 +546,15 @@ class music(commands.Cog):
     @commands.has_any_role(*roles)
     async def search_song(self, ctx, *, query: str):
         """Search for songs with interactive results"""
+        try:
+            sanitized_query = sanitize_query(query)
+        except ValueError as e:
+            return await ctx.send(f'❌ Invalid search query: {str(e)}')
+
         player = self.bot.lavalink.player_manager.get(ctx.guild.id)
         player.store('channel', ctx.channel.id)
 
-        search_query = f'{PRIMARY_SEARCH_PREFIX}{query}'
+        search_query = f'{PRIMARY_SEARCH_PREFIX}{sanitized_query}'
         results = await self._load_tracks(player, search_query, use_fallbacks=False)
 
         if not results or not results.tracks:
@@ -504,7 +562,7 @@ class music(commands.Cog):
 
         # Show top 5 results
         embed = discord.Embed(color=discord.Color.blurple())
-        embed.title = f'🔍 Search Results: {query}'
+        embed.title = f'🔍 Search Results: {sanitized_query}'
         embed.description = "Choose a number (1-5) or `cancel`\n"
 
         for i, track in enumerate(results.tracks[:5], 1):
